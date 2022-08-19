@@ -11,6 +11,7 @@ import os
 
 class Eikonal_Solver(Eikonal2D):
     def __init__(self, grid, gridsize, filename, origin = None, BL = (0,0)):
+        print("hello")
         super().__init__(grid, gridsize, origin)
         self.df = self._add_measurements(filename)
         if("sigma" in self.df.columns):
@@ -187,12 +188,21 @@ class Eikonal_Inversion():
         self.save_figure(Xi, self.Nfeval)
         self.Nfeval += 1
     
-    def callbackF2(self, Xi,convergence):
+    def callbackF_EA(self, Xi,convergence):
         print(convergence)
         res = self.fitness_func(Xi)
         print(f"iteration: {self.Nfeval}, residual {res:.3f}")
         self.residuals.append(res)
         self.save_model(Xi, self.Nfeval)
+        self.save_model2(Xi, self.Nfeval)
+        self.save_figure(Xi, self.Nfeval)
+        self.Nfeval += 1
+    
+    def callbackF_DA(self, Xi,f, contex):
+        print(f"iteration: {self.Nfeval}, residual {f:.3f}")
+        self.residuals.append(f)
+        self.save_model(Xi, self.Nfeval)
+        self.save_model2(Xi, self.Nfeval)
         self.save_figure(Xi, self.Nfeval)
         self.Nfeval += 1
 
@@ -216,10 +226,8 @@ class Eikonal_Inversion():
     def save_figure(self, Xi, iteration):
         sol = Xi.reshape(self.ny,self.nx)
         plt.figure()
-        plt.pcolor(self.xaxis, self.yaxis, sol, vmax=1.9, vmin=2.2)
+        plt.pcolor(self.xaxis, self.yaxis, sol, vmax=1.9, vmin=2.1)
         plt.colorbar()
-        plt.xlim([0,np.max(self.xaxis)])
-        plt.ylim([0,np.max(self.yaxis)])
         plt.savefig(f"{self.root_folder}/{iteration}.png")
         plt.clf()
         plt.close()
@@ -247,7 +255,12 @@ class Eikonal_Inversion():
         self.save_residuals()
         return solver
 
-    def run_nonlinear(self, *args, **kwargs):
+    def run_nonlinear(self, mode,*args, **kwargs):
         self.Nfeval = 0
-        solver = scipy.optimize.differential_evolution(func = self.fitness_func, *args, **kwargs, callback=self.callbackF2)
+        if (mode == "GA"):
+            solver = scipy.optimize.differential_evolution(func = self.fitness_func, *args, **kwargs, callback=self.callbackF_EA)
+        elif (mode == "DA"):
+            solver = scipy.optimize.dual_annealing(func = self.fitness_func, *args, **kwargs, callback=self.callbackF_DA)
+        else:
+            raise NotImplementedError
         return solver
