@@ -1,14 +1,4 @@
-from fteikpy import Eikonal2D
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-import pyproj
-import PIL.Image
-import PIL.ImageOps
-import scipy.optimize
-from scipy.spatial import ConvexHull
-import os
-from tomo_eikonal import Eikonal_Inversion
+from utils.tomo_eikonal import Eikonal_Inversion
 
 if __name__ == "__main__":
     y = 120

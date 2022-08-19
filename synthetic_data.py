@@ -1,11 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from fteikpy import Eikonal2D
 import utils.tomo_eikonal as tomo_eikonal
 import PIL.Image
 import PIL.ImageOps
-import pyproj
 
 def checkerboard(shape, tile_size):
     return (np.indices(shape) // tile_size).sum(axis=0) % 2
