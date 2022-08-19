@@ -1,4 +1,7 @@
 from utils.tomo_eikonal import Eikonal_Inversion
+import numpy as np
+import scipy.optimize
+
 
 if __name__ == "__main__":
     y = 120
