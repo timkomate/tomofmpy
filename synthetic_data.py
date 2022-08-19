@@ -15,14 +15,13 @@ def read_image(filepath, dv, v0):
     velocity_model = np.flipud(velocity_model)
     return velocity_model
 
-def random_geometry(fname, xmin, xmax, ymin, ymax, sigma, nrec, nsrc, latlon = False, plot = False):
-    np.random.seed(1234)
+def random_geometry(fname, xmin, xmax, ymin, ymax, sigma, nrec, nsrc, latlon = False, plot = False, seed = 1234):
+    np.random.seed(seed)
 
     xr = xmin + (xmax - xmin) * np.random.rand(nrec)
     yr = ymin + (ymax - ymin) * np.random.rand(nrec)
     coord_rec = np.vstack([xr, yr]).T
 
-    nsrc = 10
     xs = np.linspace(ymin,ymax,nsrc)
     ys = np.linspace(xmin,xmax,nsrc)
     a = np.tile(ymin,(nsrc))
@@ -37,7 +36,6 @@ def random_geometry(fname, xmin, xmax, ymin, ymax, sigma, nrec, nsrc, latlon = F
     coords4 = np.vstack([d, xs])
     coords_source = np.hstack([coords1,coords2, coords3, coords4]).T
     coords_source = (np.unique(coords_source, axis=0))
-    print(coords_source.shape)
     n = coords_source.shape[0]
 
     data = np.zeros((n*r,6))
@@ -86,12 +84,7 @@ if __name__ == "__main__":
     velocity_model = checkerboard((120,120), 20) * dv + v0
 
     ny,nx = velocity_model.shape
-    print(nx,ny)
-
-    print(velocity_model.shape)
-
     dx, dy = x/nx,y/ny
-    print(dx,dy)
 
     # Solve Eikonal at source
     eik = tomo_eikonal.Eikonal_Solver(velocity_model, gridsize=(dy, dx), filename="./synthetic_geometry_xy.csv", \
@@ -115,9 +108,7 @@ if __name__ == "__main__":
         plt.ylim([ymin, ymax])
         plt.show()
 
-    print("Solve")
     eik.solve()
-    print("Calc tt")
     eik.calc_traveltimes()
-    print("Save")
     eik.save_measurements("./synthetic_measurements_xy.csv")
+    print("Done")
