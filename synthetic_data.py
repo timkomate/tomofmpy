@@ -76,11 +76,13 @@ if __name__ == "__main__":
     dv = 0.1
     v0 = 2
 
+    sigma = 1
+
     y = 120
     x = 120
 
     fname = "synthetic_geometry_xy.csv"
-    df = random_geometry(fname, xmin, xmax, ymin,ymax,1, r, nsrc, latlon= False)
+    df = random_geometry(fname, xmin, xmax, ymin,ymax,sigma, r, nsrc, latlon= False)
     velocity_model = checkerboard((120,120), 20) * dv + v0
 
     ny,nx = velocity_model.shape
