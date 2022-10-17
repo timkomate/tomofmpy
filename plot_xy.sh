@@ -18,11 +18,11 @@ R="-R0/120/0/120"
 J="-JX16c"
 filename="cart"
 
-gmt xyz2grd "./test_syn/12.xyz" -I5/5 -Gvel.grd $R -rp -i0+o2.5,1+o2.5,2
-
+gmt xyz2grd "./test_syn_cb_noise/11.xyz" -I5/5 -Gvel.grd $R -rp -i0+o2.5,1+o2.5,2
+gmt makecpt -T2/2.1 -CgrayC > colors.cpt
 gmt begin $filename pdf,png
   gmt basemap -B $R $J
-  gmt grdimage $R $J vel.grd -Cviridis
+  gmt grdimage $R $J vel.grd -CgrayC
   #gmt plot "./test_syn/9.xyz" -CgrayC -Sc.5c
-  gmt colorbar -DJCB+w10c/0.5c+h -Bx0.05+l"Velocity" -By+l"km/s" -C$cpt
+  gmt colorbar -DJCB+w10c/0.5c+h -Bx0.05+l"Velocity" -By+l"km/s" -Ccolors.cpt
 gmt end

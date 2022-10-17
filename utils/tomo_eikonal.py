@@ -11,7 +11,6 @@ import os
 
 class Eikonal_Solver(Eikonal2D):
     def __init__(self, grid, gridsize, filename, origin = None, BL = (0,0)):
-        print("hello")
         super().__init__(grid, gridsize, origin)
         self.df = self._add_measurements(filename)
         if("sigma" in self.df.columns):
@@ -46,7 +45,7 @@ class Eikonal_Solver(Eikonal2D):
         self.df["yr"] = (Nr - self.base[1]) / 1000
     
     def transform2latlon(self,X,Y):
-        self._init_transformer()
+        #self._init_transformer()
         lons, lats = self.inv_transformer.transform((X*1000+self.base[0]),(Y*1000+self.base[1]))
         return lons,lats 
 
@@ -135,7 +134,6 @@ class Eikonal_Inversion():
             self.eik.transform2xy()
         self.save_stations()
         
-
     def fitness_func(self, x: np.array) -> np.float64:
         velocity_model = x.reshape(self.ny,self.nx)
         self.eik.update_model(velocity_model)
@@ -147,6 +145,11 @@ class Eikonal_Inversion():
         if (self.eta):
             fitness += self.eta * self.calc_roughness(x) 
         return np.sqrt(fitness)
+    
+    def fitness_func_PSO(self, x: np.array, dim) -> np.float64:
+        x = x.reshape(dim,self.ny*self.nx)
+        fittnesses = np.apply_along_axis(self.fitness_func,axis=1,arr = x)
+        return fittnesses
 
     def calc_perturbation(self,x):
         return (x-self.x0).T@(x-self.x0)
@@ -189,7 +192,7 @@ class Eikonal_Inversion():
         self.Nfeval += 1
     
     def callbackF_EA(self, Xi,convergence):
-        print(convergence)
+        #print(convergence)
         res = self.fitness_func(Xi)
         print(f"iteration: {self.Nfeval}, residual {res:.3f}")
         self.residuals.append(res)
@@ -200,6 +203,15 @@ class Eikonal_Inversion():
     
     def callbackF_DA(self, Xi,f, contex):
         print(f"iteration: {self.Nfeval}, residual {f:.3f}")
+        self.residuals.append(f)
+        self.save_model(Xi, self.Nfeval)
+        self.save_model2(Xi, self.Nfeval)
+        self.save_figure(Xi, self.Nfeval)
+        self.Nfeval += 1
+    
+    def callbackF_PSO(self, Xi):
+        res = self.fitness_func(Xi)
+        print(f"iteration: {self.Nfeval}, residual {res:.3f}")
         self.residuals.append(f)
         self.save_model(Xi, self.Nfeval)
         self.save_model2(Xi, self.Nfeval)
@@ -226,7 +238,7 @@ class Eikonal_Inversion():
     def save_figure(self, Xi, iteration):
         sol = Xi.reshape(self.ny,self.nx)
         plt.figure()
-        plt.pcolor(self.xaxis, self.yaxis, sol, vmax=1.9, vmin=2.1)
+        plt.pcolor(self.xaxis, self.yaxis, sol) #vmax=1.9, vmin=2.1)
         plt.colorbar()
         plt.savefig(f"{self.root_folder}/{iteration}.png")
         plt.clf()
@@ -261,6 +273,10 @@ class Eikonal_Inversion():
             solver = scipy.optimize.differential_evolution(func = self.fitness_func, *args, **kwargs, callback=self.callbackF_EA)
         elif (mode == "DA"):
             solver = scipy.optimize.dual_annealing(func = self.fitness_func, *args, **kwargs, callback=self.callbackF_DA)
+        elif (mode == "PSO"):
+            import pyswarms as ps
+            optimizer = ps.single.GlobalBestPSO(dimensions=self.ny*self.nx, *args, **kwargs)
+            solver = optimizer.optimize(self.fitness_func_PSO, iters=5, dim = 10)
         else:
             raise NotImplementedError
         return solver

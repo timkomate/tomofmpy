@@ -112,5 +112,6 @@ if __name__ == "__main__":
 
     eik.solve()
     eik.calc_traveltimes()
-    eik.save_measurements("./synthetic_measurements_xy.csv")
+    eik.add_noise(1)
+    eik.save_measurements("./synthetic_measurements_xy_noise.csv")
     print("Done")
