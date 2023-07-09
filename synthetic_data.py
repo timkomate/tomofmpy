@@ -33,22 +33,17 @@ def random_geometry(
 ):
     np.random.seed(seed)
 
-    xr = xmin + (xmax - xmin) * np.random.rand(nrec)
-    yr = ymin + (ymax - ymin) * np.random.rand(nrec)
+    xr = np.random.uniform(xmin, xmax, nrec)
+    yr = np.random.uniform(ymin, ymax, nrec)
     coord_rec = np.vstack([xr, yr]).T
 
     xs = np.linspace(ymin, ymax, nsrc)
     ys = np.linspace(xmin, xmax, nsrc)
-    a = np.tile(ymin, (nsrc))
-    b = np.tile(xmax, (nsrc))
-    c = np.tile(ymax, (nsrc))
-    d = np.tile(xmin, (nsrc))
-
-    coords1 = np.vstack([ys, a])
-    coords2 = np.vstack([b, xs])
-    coords3 = np.vstack([ys, c])
-    coords4 = np.vstack([d, xs])
-    coords_source = np.hstack([coords1, coords2, coords3, coords4]).T
+    coords1 = np.column_stack([ys, np.full_like(ys, ymin)])
+    coords2 = np.column_stack([np.full_like(xs, xmax), xs])
+    coords3 = np.column_stack([ys, np.full_like(ys, ymax)])
+    coords4 = np.column_stack([np.full_like(xs, xmin), xs])
+    coords_source = np.vstack([coords1, coords2, coords3, coords4])
     coords_source = np.unique(coords_source, axis=0)
     n = coords_source.shape[0]
 
@@ -64,13 +59,12 @@ def random_geometry(
         )
     else:
         df = pd.DataFrame(data, columns=["source_id", "xs", "ys", "xr", "yr", "sigma"])
-    df.astype({"source_id": "int32"})
     df.to_csv(path_or_buf=fname, index=False)
     if plot:
-        plt.scatter(coords1[0], coords1[1])
-        plt.scatter(coords2[0], coords2[1])
-        plt.scatter(coords3[0], coords3[1])
-        plt.scatter(coords4[0], coords4[1])
+        plt.scatter(coords1[:, 0], coords1[:, 1])
+        plt.scatter(coords2[:, 0], coords2[:, 1])
+        plt.scatter(coords3[:, 0], coords3[:, 1])
+        plt.scatter(coords4[:, 0], coords4[:, 1])
         plt.xlim([xmin, xmax])
         plt.ylim([ymin, ymax])
         plt.show()
@@ -91,9 +85,6 @@ if __name__ == "__main__":
     v0 = 2
 
     sigma = 1
-
-    y = 120
-    x = 120
 
     fname = "synthetic_geometry_xy.csv"
     df = random_geometry(fname, xmin, xmax, ymin, ymax, sigma, r, nsrc, latlon=False)
