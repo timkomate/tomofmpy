@@ -81,9 +81,7 @@ def random_geometry(config):
             data, columns=["source_id", "lons", "lats", "lonr", "latr", "sigma"]
         )
     else:
-        df = pd.DataFrame(
-            data, columns=["source_id", "xs", "ys", "xr", "yr", "sigma"]
-        )
+        df = pd.DataFrame(data, columns=["source_id", "xs", "ys", "xr", "yr", "sigma"])
     df.to_csv(path_or_buf=config.fname, index=False)
     if config.plot:
         plt.scatter(coords1[:, 0], coords1[:, 1])
@@ -101,7 +99,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Eikonal Solver")
 
     # Add the command-line arguments
-    parser.add_argument("--config", help="Path to the config file", default="config.ini")
+    parser.add_argument(
+        "--config", help="Path to the config file", default="config.ini"
+    )
 
     # Parse the command-line arguments
     args = parser.parse_args()
@@ -115,7 +115,9 @@ if __name__ == "__main__":
     elif config.method == "image":
         velocity_model = read_image(config.image_path, config.dv, config.v0)
     else:
-        raise ValueError(f"Invalid method '{config.method}' specified in the config file.")
+        raise ValueError(
+            f"Invalid method '{config.method}' specified in the config file."
+        )
 
     # Generate random geometry
     df = random_geometry(config)
@@ -151,6 +153,6 @@ if __name__ == "__main__":
 
     eik.solve()
     eik.calc_traveltimes()
-    eik.add_noise(1)
+    eik.add_noise(config.noise)
     eik.save_measurements(config.fname)
     print("Done")

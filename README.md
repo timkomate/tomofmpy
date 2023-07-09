@@ -66,10 +66,11 @@ The `config.ini` file is used to customize the synthetic data generation process
   - `sigma`: Standard deviation for the random geometry.
   - `seed`: Seed for the random number generator.
   - `fname`: Output file name for the generated synthetic dataset.
+  - `noise`: Standard deviation gaussian noise added to the synthetic traveltime
 
 ### License
 
-This software is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+This software is licensed under the MIT License.
 
 ### Acknowledgments
 
