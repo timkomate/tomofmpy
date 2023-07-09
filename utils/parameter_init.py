@@ -1,5 +1,6 @@
 import configparser
 
+
 class Config:
     def __init__(self, config_file):
         self.config = configparser.ConfigParser()
@@ -28,3 +29,4 @@ class Config:
         self.seed = int(random_geometry_section.get("seed"))
         self.fname = random_geometry_section.get("fname")
         self.image_path = velocity_model_section.get("image_path")
+        self.noise = float(random_geometry_section.get("noise"))
