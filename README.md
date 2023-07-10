@@ -24,7 +24,7 @@ pip install -r requirements.txt
 
 ## Synthetic Data Generation
 
-The synthetic data generation module in MySoftware allows users to generate synthetic seismic data for testing and experimentation. This module includes functionality to generate random geometry and create velocity models using a checkerboard pattern or image files.
+The synthetic data generation module in TomoFMpy allows users to generate synthetic seismic data for testing and experimentation. This module includes functionality to generate random geometry and create velocity models using a checkerboard pattern or image files.
 
 
 
@@ -58,7 +58,7 @@ These plots provide visual representations of the synthetic data generated and c
 
 ### Configuration
 
-The `config.ini` file is used to customize the synthetic data generation process. The following parameters can be adjusted:
+The synthetic_config.ini file is used to customize the synthetic data generation process. The following parameters can be adjusted:
 
 - **[geometry]**
   - `y`: Dimensions of the grid along the y-axis.
