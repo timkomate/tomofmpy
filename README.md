@@ -63,7 +63,6 @@ The `config.ini` file is used to customize the synthetic data generation process
   - `image_path`: Path to the image file (required if using the image method).
 
 - **[general]**
-  - `sigma`: Standard deviation for the random geometry.
   - `seed`: Seed for the random number generator.
   - `fname`: Output file name for the generated synthetic dataset.
   - `noise`: Standard deviation gaussian noise added to the synthetic traveltime

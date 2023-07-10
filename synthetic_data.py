@@ -1,10 +1,10 @@
+import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import utils.tomo_eikonal as tomo_eikonal
 import PIL.Image
 import PIL.ImageOps
-import argparse
+from utils import tomo_eikonal
 from utils.parameter_init import Config
 
 
@@ -74,7 +74,7 @@ def random_geometry(config):
     c = 0
     for i, source in enumerate(coords_source):
         for j, rec in enumerate(coord_rec):
-            data[c] = [i, source[0], source[1], rec[0], rec[1], config.sigma]
+            data[c] = [i, source[0], source[1], rec[0], rec[1], 1]
             c += 1
     if config.latlon:
         df = pd.DataFrame(

@@ -25,7 +25,6 @@ class Config:
         self.dv = float(velocity_model_section.get("dv"))
         self.v0 = float(velocity_model_section.get("v0"))
 
-        self.sigma = float(random_geometry_section.get("sigma"))
         self.seed = int(random_geometry_section.get("seed"))
         self.fname = random_geometry_section.get("fname")
         self.image_path = velocity_model_section.get("image_path")
