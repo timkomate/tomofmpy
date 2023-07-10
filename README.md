@@ -40,6 +40,22 @@ python main.py --config config/synthetic_config.ini
 
 3. The generated synthetic data will be saved to the specified output files.
 
+### Plots
+
+After running the synthetic_data.py script, the following plots can be produced:
+
+1. Checkerboard case
+
+![Plot](images/Figure_1.png)
+
+This plot shows the generated grid with the calculated travel times. The black dots represent the sources, and the red triangles represent the receivers.
+
+2. Image case
+
+![Plot](images/Figure_2.png)
+
+These plots provide visual representations of the synthetic data generated and can be used for analysis and further processing.
+
 ### Configuration
 
 The `config.ini` file is used to customize the synthetic data generation process. The following parameters can be adjusted:
@@ -68,11 +84,7 @@ The `config.ini` file is used to customize the synthetic data generation process
   - `fname`: Output file name for the generated synthetic dataset.
   - `noise`: Standard deviation gaussian noise added to the synthetic traveltime
 
-After running the code 
 
-![Plot](images/Figure_1.png)
-
-![Plot](images/Figure_2.png)
 
 ### License
 

@@ -45,7 +45,7 @@ def read_image(filepath, dv, v0):
 
 def random_geometry(config):
     """
-    Generate random geometry based on the provided configuration.
+    Generate random source-receiver geometry based on the provided configuration.
 
     Args:
         config (Config): Configuration object.
