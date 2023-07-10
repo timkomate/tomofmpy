@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     # Generate velocity model
     if config.method == "checkerboard":
-        velocity_model = checkerboard((config.x, config.y), 20) * config.dv + config.v0
+        velocity_model = checkerboard((config.x, config.y), config.tile_size) * config.dv + config.v0
     elif config.method == "image":
         velocity_model = read_image(config.image_path, config.dv, config.v0)
     else:

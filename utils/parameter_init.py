@@ -24,8 +24,9 @@ class Config:
         self.method = velocity_model_section.get("method")
         self.dv = float(velocity_model_section.get("dv"))
         self.v0 = float(velocity_model_section.get("v0"))
+        self.tile_size = int(velocity_model_section.get("tile_size"))
+        self.image_path = velocity_model_section.get("image_path")
 
         self.seed = int(random_geometry_section.get("seed"))
         self.fname = random_geometry_section.get("fname")
-        self.image_path = velocity_model_section.get("image_path")
         self.noise = float(random_geometry_section.get("noise"))
