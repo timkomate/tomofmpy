@@ -60,12 +60,19 @@ The `config.ini` file is used to customize the synthetic data generation process
   - `method`: Method for generating the velocity model (checkerboard or image).
   - `dv`: Velocity increment.
   - `v0`: Starting velocity.
+  - `tile_size`: Checkerboard tile size (required if using the checkerboard method)
   - `image_path`: Path to the image file (required if using the image method).
 
 - **[general]**
   - `seed`: Seed for the random number generator.
   - `fname`: Output file name for the generated synthetic dataset.
   - `noise`: Standard deviation gaussian noise added to the synthetic traveltime
+
+After running the code 
+
+![Plot](images/Figure_1.png)
+
+![Plot](images/Figure_2.png)
 
 ### License
 

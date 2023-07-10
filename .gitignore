@@ -11,3 +11,4 @@ gmt.*
 *.grd
 real_data*
 *.log
+!images/*
