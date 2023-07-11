@@ -109,6 +109,10 @@ if __name__ == "__main__":
     # Parse the config file
     config = Config(args.config)
 
+    # Generate random station-event geometry
+    df = random_geometry(config)
+    df.to_csv(path_or_buf="synthetic_geometry.csv", index=False)
+
     # Generate velocity model
     if config.method == "checkerboard":
         velocity_model = checkerboard((config.x, config.y), config.tile_size) * config.dv + config.v0
@@ -119,9 +123,7 @@ if __name__ == "__main__":
             f"Invalid method '{config.method}' specified in the config file."
         )
 
-    # Generate random geometry
-    df = random_geometry(config)
-
+    # Solving the forward problem
     ny, nx = velocity_model.shape
     dx, dy = config.x / nx, config.y / ny
 

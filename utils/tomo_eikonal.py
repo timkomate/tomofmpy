@@ -3,8 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import pyproj
-import PIL.Image
-import PIL.ImageOps
 import scipy.optimize
 from scipy.spatial import ConvexHull
 import os
@@ -109,18 +107,15 @@ class Eikonal_Inversion:
         self.y, self.x = modelspace
         self.ny, self.nx = gridsize
         self.transform = transform
-
         self.n = self.nx * self.ny
         self.dy, self.dx = self.y / gridsize[0], self.x / gridsize[1]
         self.yaxis = np.arange(self.ny) * self.dy
         self.xaxis = np.arange(self.nx) * self.dx
         self.filename = filename
         self.root_folder = root_folder
-        if not os.path.exists(self.root_folder):
-            os.makedirs(root_folder)
+        os.makedirs(root_folder, exist_ok=True)
         self.epsilon = epsilon
         self.eta = eta
-
         self.residuals = []
         self.eik = Eikonal_Solver(
             np.zeros((self.ny, self.nx)),
@@ -149,11 +144,6 @@ class Eikonal_Inversion:
         fittnesses = np.apply_along_axis(self.fitness_func, axis=1, arr=x)
         return fittnesses
 
-    def fitness_func_PSO(self, x: np.array, dim) -> np.float64:
-        x = x.reshape(dim, self.ny * self.nx)
-        fittnesses = np.apply_along_axis(self.fitness_func, axis=1, arr=x)
-        return fittnesses
-
     def calc_perturbation(self, x):
         return (x - self.x0).T @ (x - self.x0)
 
@@ -164,8 +154,8 @@ class Eikonal_Inversion:
     def calc_D(self):
         D = np.zeros((self.n, self.n), dtype=np.float64)
         c = 0
-        for i in np.arange(self.ny):
-            for j in np.arange(self.nx):
+        for i in range(self.ny):
+            for j in range(self.nx):
                 D_tmp = np.zeros((self.ny, self.nx), dtype=np.float64)
                 cc = 0
                 if i - 1 >= 0:
@@ -195,7 +185,6 @@ class Eikonal_Inversion:
         self.Nfeval += 1
 
     def callbackF_EA(self, Xi, convergence):
-        # print(convergence)
         res = self.fitness_func(Xi)
         print(f"iteration: {self.Nfeval}, residual {res:.3f}")
         self.residuals.append(res)
@@ -215,16 +204,7 @@ class Eikonal_Inversion:
     def callbackF_PSO(self, Xi):
         res = self.fitness_func(Xi)
         print(f"iteration: {self.Nfeval}, residual {res:.3f}")
-        self.residuals.append(f)
-        self.save_model(Xi, self.Nfeval)
-        self.save_model2(Xi, self.Nfeval)
-        self.save_figure(Xi, self.Nfeval)
-        self.Nfeval += 1
-
-    def callbackF_PSO(self, Xi):
-        res = self.fitness_func(Xi)
-        print(f"iteration: {self.Nfeval}, residual {res:.3f}")
-        self.residuals.append(f)
+        self.residuals.append(res)
         self.save_model(Xi, self.Nfeval)
         self.save_model2(Xi, self.Nfeval)
         self.save_figure(Xi, self.Nfeval)
