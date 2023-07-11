@@ -118,6 +118,8 @@ if __name__ == "__main__":
         velocity_model = checkerboard((config.x, config.y), config.tile_size) * config.dv + config.v0
     elif config.method == "image":
         velocity_model = read_image(config.image_path, config.dv, config.v0)
+    elic config.method == "constant":
+        velocity_model = np.full((config.x, config.y), config.v0)
     else:
         raise ValueError(
             f"Invalid method '{config.method}' specified in the config file."

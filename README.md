@@ -73,7 +73,7 @@ The synthetic_config.ini file is used to customize the synthetic data generation
   - `plot`: Whether to plot the generated geometry (True/False).
 
 - **[velocity_model]**
-  - `method`: Method for generating the velocity model (checkerboard or image).
+  - `method`: Method for generating the velocity model (checkerboard, image or constant).
   - `dv`: Velocity increment.
   - `v0`: Starting velocity.
   - `tile_size`: Checkerboard tile size (required if using the checkerboard method)
