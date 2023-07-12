@@ -2,7 +2,7 @@
 
 Python code for 2D traveltime inversion.
 
-The Eikonal Solver is a program that solves the Eikonal equation for a given velocity model and generates random geometry. It can generate a velocity model using a checkerboard pattern or an image file, and it creates random geometry based on the provided configuration. The solver calculates the travel times and saves the measurements to a file.
+The TomoFMpy is a program that solves the Eikonal equation for a given velocity model and can fit a 2D velocity model to traveltime data. It can generate a velocity model (using a checkerboard pattern or an image file) and random source-receiver geometry based on the provided configuration. 
 
 ## Prerequisites
 
@@ -24,7 +24,7 @@ pip install -r requirements.txt
 
 ## Synthetic Data Generation
 
-The synthetic data generation module in TomoFMpy allows users to generate synthetic seismic data for testing and experimentation. This module includes functionality to generate random geometry and create velocity models using a checkerboard pattern or image files.
+The synthetic data generation module (synthetic_data.py) in TomoFMpy allows users to generate synthetic seismic data for testing and experimentation. This module includes functionality to generate random geometry and create velocity models using a checkerboard pattern or image files.
 
 
 
