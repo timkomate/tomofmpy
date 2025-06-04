@@ -19,6 +19,8 @@ class Config:
         self.r = int(geometry_section.get("r"))
         self.nsrc = int(geometry_section.get("nsrc"))
         self.latlon = geometry_section.getboolean("latlon")
+        self.bl_lon = float(geometry_section.get("bl_lon"))
+        self.bl_lat = geometry_section.get("bl_lat")
         self.plot = geometry_section.getboolean("plot")
 
         self.method = velocity_model_section.get("method")
