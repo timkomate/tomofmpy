@@ -2,3 +2,6 @@ numpy
 pandas
 matplotlib
 Pillow
+fteikpy
+scipy
+pyproj
