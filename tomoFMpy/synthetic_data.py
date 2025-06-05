@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import PIL.Image
 import PIL.ImageOps
-from utils import tomo_eikonal
+from core import tomo_eikonal
 from utils.parameter_init import Config
 
 logging.basicConfig(
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config",
         help="Path to the config file",
-        default="configs/synthetic_config.ini",
+        default="../configs/synthetic_config.ini",
     )
 
     # Parse the command-line arguments
