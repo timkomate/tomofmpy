@@ -5,11 +5,11 @@ import numpy as np
 import pandas as pd
 import PIL.Image
 import PIL.ImageOps
-from core import tomo_eikonal
-from utils.parameter_init import Config
+from tomoFMpy.core import solver
+from tomoFMpy.utils.parameter_init import Config
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
@@ -27,7 +27,11 @@ def checkerboard(shape, tile_size):
         ndarray: Checkerboard pattern.
 
     """
-    logger.debug("Generating checkerboard pattern with shape %s and tile size %s", shape, tile_size)
+    logger.debug(
+        "Generating checkerboard pattern with shape %s and tile size %s",
+        shape,
+        tile_size,
+    )
     idx = np.indices(shape)
     return ((idx // tile_size).sum(axis=0)) % 2
 
@@ -86,6 +90,7 @@ def build_source_boundary(config):
     unique_boundary = np.unique(boundary, axis=0)
     return unique_boundary
 
+
 def random_geometry(config):
     """
     Generate random source-receiver geometry based on the provided configuration.
@@ -101,7 +106,7 @@ def random_geometry(config):
 
     xr = np.random.uniform(config.xmin, config.xmax, config.r)
     yr = np.random.uniform(config.ymin, config.ymax, config.r)
-    receivers  = np.column_stack([xr, yr])
+    receivers = np.column_stack([xr, yr])
 
     sources = build_source_boundary(config)
     num_sources = sources.shape[0]
@@ -153,19 +158,21 @@ def plot_eikonal_results(eik, config: Config) -> None:
     ax.set_xlim(config.xmin, config.xmax)
     ax.set_ylim(config.ymin, config.ymax)
     plt.title("Sources (black) and Receivers (red)")
-    plt.legend(loc = "upper right")
+    plt.legend(loc="upper right")
     plt.show()
 
 
 if __name__ == "__main__":
     # Create the argument parser
-    parser = argparse.ArgumentParser(description="Run the Eikonal Solver with synthetic velocity models.")
+    parser = argparse.ArgumentParser(
+        description="Run the Eikonal Solver with synthetic velocity models."
+    )
 
     # Add the command-line arguments
     parser.add_argument(
         "--config",
         help="Path to the config file",
-        default="../configs/synthetic_config.ini",
+        default="configs/synthetic_config.ini",
     )
 
     # Parse the command-line arguments
@@ -174,11 +181,14 @@ if __name__ == "__main__":
 
     # Parse the config file
     config = Config(args.config)
+    logger.debug(config)
 
     # Generate velocity model
     logger.info("Generating velocity model using method: %s", config.method)
     if config.method == "checkerboard":
-        velocity_model = checkerboard((config.x, config.y), config.tile_size) * config.dv + config.v0
+        velocity_model = (
+            checkerboard((config.x, config.y), config.tile_size) * config.dv + config.v0
+        )
     elif config.method == "image":
         velocity_model = read_image(config.image_path, config.dv, config.v0)
     else:
@@ -194,13 +204,12 @@ if __name__ == "__main__":
     dx = config.x / nx
     dy = config.y / ny
 
-
     # Solve Eikonal at source
-    eik = tomo_eikonal.Eikonal_Solver(
+    eik = solver.Eikonal_Solver(
         velocity_model,
         gridsize=(dy, dx),
-        filename=config.fname,
-        BL=(config.bl_lon, config.bl_lat),
+        measurements_csv=config.fname,
+        bl_corner=(config.bl_lon, config.bl_lat),
     )
     if config.latlon:
         eik.transform2xy()
@@ -208,12 +217,8 @@ if __name__ == "__main__":
     if config.plot:
         plot_eikonal_results(eik, config)
 
-    logger.info("Solving Eikonal equation")
     eik.solve()
-    logger.info("Calculating travel times")
-    eik.calc_traveltimes()
-    logger.info("Adding Gaussian noise with std %s", config.noise)
+    eik.calculate_traveltimes()
     eik.add_noise(config.noise)
-    logger.info("Saving measurements to %s", config.fname)
     eik.save_measurements(config.fname)
     logger.info("Done")
