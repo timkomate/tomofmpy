@@ -5,13 +5,11 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="tomoFMpy",                   # your package name (must be unique on PyPI)
+    name="tomoFMpy",
     version="0.1.0",
     author="Mate Timko",
     author_email="timko.mate@gmail.com",
-    description=(
-        "TBD"
-    ),
+    description="Python package for 2D traveltime inversion.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/timkomate/tomofmpy",
