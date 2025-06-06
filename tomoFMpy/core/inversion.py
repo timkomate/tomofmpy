@@ -4,7 +4,8 @@ import scipy.optimize
 from scipy.spatial import ConvexHull
 import matplotlib.pyplot as plt
 
-from tomoFMpy.core.solver import EikonalSolver
+from tomoFMpy.core.solver import Eikonal_Solver
+
 
 class Eikonal_Inversion:
     def __init__(
@@ -214,4 +215,3 @@ class Eikonal_Inversion:
         else:
             raise NotImplementedError
         return solver
-

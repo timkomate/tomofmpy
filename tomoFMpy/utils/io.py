@@ -4,6 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def validate_measurement_csv(df):
     required = ["source_id"]
     if {"lons", "lats", "lonr", "latr"}.issubset(df.columns):
@@ -22,7 +23,6 @@ def validate_measurement_csv(df):
     # If sigma exists, ensure no zeros
     if "sigma" in df.columns and (df["sigma"] <= 0).any():
         raise ValueError("All 'sigma' values must be > 0.")
-
 
 
 def load_measurements_csv(path):

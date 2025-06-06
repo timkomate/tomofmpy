@@ -7,6 +7,7 @@ from tomoFMpy.utils import io
 
 logger = logging.getLogger(__name__)
 
+
 class Eikonal_Solver(Eikonal2D):
     """
     Wrapper around fteikpy.Eikonal2D that reads measurement CSV,
@@ -22,10 +23,16 @@ class Eikonal_Solver(Eikonal2D):
         """
         # Initialize base class
         super().__init__(grid, gridsize, origin)
-        logger.debug("Initializing EikonalSolver with grid shape %s, gridsize %s", grid.shape, gridsize)
+        logger.debug(
+            "Initializing EikonalSolver with grid shape %s, gridsize %s",
+            grid.shape,
+            gridsize,
+        )
         # Load measurements
         self.df = io.load_measurements_csv(measurements_csv)
-        logger.info("Loaded %d measurement rows from %s", len(self.df), measurements_csv)
+        logger.info(
+            "Loaded %d measurement rows from %s", len(self.df), measurements_csv
+        )
         self.Cd = self._build_covariance()
         logger.debug("Constructed covariance matrix of size %s", self.Cd.shape)
         self.traveltimes = np.zeros(len(self.df), dtype=float)
@@ -51,8 +58,9 @@ class Eikonal_Solver(Eikonal2D):
         )
         self.transformer = pyproj.Transformer.from_crs(4326, crs, always_xy=True)
         self.inv_transformer = pyproj.Transformer.from_crs(crs, 4326, always_xy=True)
-        logger.info("Transformers initialized for LAEA centered at (%.4f, %.4f)", lon, lat)
-
+        logger.info(
+            "Transformers initialized for LAEA centered at (%.4f, %.4f)", lon, lat
+        )
 
     def transform_to_xy(self):
         """
@@ -184,7 +192,10 @@ class Eikonal_Solver(Eikonal2D):
         Returns:
             List of "grid" callables (one per source).
         """
-        logger.info("Solving Eikonal for %d unique sources", len(pd.unique(self.df["source_id"])))
+        logger.info(
+            "Solving Eikonal for %d unique sources",
+            len(pd.unique(self.df["source_id"])),
+        )
         sources = self._get_sources()
         self.tt = Eikonal2D.solve(
             self, sources=sources, nsweep=nsweep, return_gradient=return_gradient
@@ -242,6 +253,8 @@ class Eikonal_Solver(Eikonal2D):
             sigma: Standard deviation of noise.
             mu: Mean of noise (default: 0).
         """
-        logger.info("Adding Gaussian noise (mu=%.3f, sigma=%.3f) to traveltimes", mu, sigma)
+        logger.info(
+            "Adding Gaussian noise (mu=%.3f, sigma=%.3f) to traveltimes", mu, sigma
+        )
         noise = np.random.normal(mu, sigma, size=(self.traveltimes.size))
         self.traveltimes += noise
