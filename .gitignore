@@ -1,14 +1,15 @@
 __pycache__/
 .ipynb_checkpoints/
+*egg*
 gmt/
 *.csv
 *.cpt
-test*/
 *.pdf
 *.png
 gmt.*
-*.cpt
 *.grd
 real_data*
 *.log
 !images/*
+*.ipynb
+main*
