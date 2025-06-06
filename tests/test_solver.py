@@ -14,7 +14,7 @@ from tomoFMpy.core.solver import Eikonal_Solver
 def patch_eikonal2d(monkeypatch):
     """
     Replace Eikonal2D.solve with a dummy implementation that returns a single "grid" callable
-    which returns 0.5 for any input points. This allows testing solve()/calc_traveltimes()
+    which returns 0.5 for any input points. This allows testing solve()/calculate_traveltimes()
     without requiring a real Eikonal solver.
     """
     def dummy_solve(self, sources=None, nsweep=None, return_gradient=False):
@@ -53,7 +53,7 @@ def simple_csv(tmp_path):
 def test_load_measurements_and_covariance(simple_csv):
     grid = np.zeros((2, 2))
 
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), filename=simple_csv, origin=None, BL=(10.0, 50.0))
+    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=simple_csv, origin=None, bl_corner=(10.0, 50.0))
 
     # Check that df was loaded correctly
     df_loaded = solver.df
@@ -73,7 +73,7 @@ def test_load_measurements_and_covariance(simple_csv):
 
 def test_transform_and_inverse_roundtrip(simple_csv):
     grid = np.zeros((5, 5))
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), filename=simple_csv, BL=(10.0, 50.0))
+    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=simple_csv, bl_corner=(10.0, 50.0))
 
     # Before transforming, df should not have xs/ys or xr/yr
     assert "xs" not in solver.df.columns
@@ -82,7 +82,7 @@ def test_transform_and_inverse_roundtrip(simple_csv):
     assert "yr" not in solver.df.columns
 
     # Perform transform to local x/y
-    solver.transform2xy()
+    solver.transform_to_xy()
 
     # Now df should contain xs, ys, xr, yr
     for col in ("xs", "ys", "xr", "yr"):
@@ -92,7 +92,7 @@ def test_transform_and_inverse_roundtrip(simple_csv):
     x_km = np.array([solver.df["xs"].iloc[0]])
     y_km = np.array([solver.df["ys"].iloc[0]])
     # Run inverse transform
-    lon_back, lat_back = solver.transform2latlon(x_km, y_km)
+    lon_back, lat_back = solver.transform_to_latlon(x_km, y_km)
     # Should approximately equal the original (10.0, 50.0)
     assert pytest.approx(lon_back[0], rel=1e-5) == 10.0
     assert pytest.approx(lat_back[0], rel=1e-5) == 50.0
@@ -100,8 +100,8 @@ def test_transform_and_inverse_roundtrip(simple_csv):
 
 def test_get_sources_and_receivers_after_transform(simple_csv):
     grid = np.ones((5, 5))
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), filename=simple_csv, BL=(10.0, 50.0))
-    solver.transform2xy()
+    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=simple_csv, bl_corner=(10.0, 50.0))
+    solver.transform_to_xy()
 
     # _get_sources should return one source (ys, xs)
     sources = solver._get_sources()
@@ -120,15 +120,15 @@ def test_get_sources_and_receivers_after_transform(simple_csv):
 
 def test_solve_and_traveltimes_and_residuals(simple_csv):
     grid = np.zeros((3, 3))
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), filename=simple_csv, BL=(10.0, 50.0))
-    solver.transform2xy()
+    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=simple_csv, bl_corner=(10.0, 50.0))
+    solver.transform_to_xy()
 
     assert np.allclose(solver.traveltimes, 0.0)
 
     tt_list = solver.solve(return_gradient=False, nsweep=1)
     assert isinstance(tt_list, list) and len(tt_list) == 1
 
-    solver.calc_traveltimes()
+    solver.calculate_traveltimes()
     assert np.allclose(solver.traveltimes, 0.5)
 
     res = solver.get_residuals()
@@ -145,8 +145,8 @@ def test_save_and_reload_measurements(tmp_path, simple_csv):
     shutil.copy(simple_csv, dest)
 
     grid = np.zeros((2, 2))
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), filename=str(dest), BL=(10.0, 50.0))
-    solver.transform2xy()
+    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=str(dest), bl_corner=(10.0, 50.0))
+    solver.transform_to_xy()
 
     # Manually set traveltimes
     solver.traveltimes = np.array([0.2, 0.4], dtype=float)
@@ -160,8 +160,8 @@ def test_save_and_reload_measurements(tmp_path, simple_csv):
 
 def test_add_noise_affects_traveltimes(simple_csv, monkeypatch):
     grid = np.zeros((3, 3))
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), filename=simple_csv, BL=(10.0, 50.0))
-    solver.transform2xy()
+    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=simple_csv, bl_corner=(10.0, 50.0))
+    solver.transform_to_xy()
 
     solver.traveltimes = np.array([0.5, 0.5], dtype=float)
 
@@ -199,7 +199,7 @@ def csv_without_sigma(tmp_path):
 
 def test_covariance_defaults_to_identity(csv_without_sigma):
     grid = np.zeros((2, 2))
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), filename=csv_without_sigma, BL=(10.0, 50.0))
+    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=csv_without_sigma, bl_corner=(10.0, 50.0))
 
     # Since there was no sigma column, Cd should be identity (size=1×1)
     assert solver.Cd.shape == (1, 1)

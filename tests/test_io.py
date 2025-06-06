@@ -10,8 +10,8 @@ from tomoFMpy.utils.io import (
 )
 
 
-def test_validate_success_latlon(capsys):
-    # DataFrame with lat/lon columns, no 'tt' → should warn but not raise
+def test_validate_success_latlon(caplog):
+    # DataFrame with lat/lon columns, no 'tt'. Should warn but not raise
     df = pd.DataFrame({
         "source_id": [0, 1],
         "lons": [10.0, 20.0],
@@ -21,12 +21,11 @@ def test_validate_success_latlon(capsys):
         "sigma": [1.0, 2.0],
     })
     validate_measurement_csv(df)
-    captured = capsys.readouterr()
-    assert "Warning: CSV has no 'tt' column" in captured.out
+    assert "Warning: CSV has no 'tt' column" in caplog.text
 
 
-def test_validate_success_xy(capsys):
-    # DataFrame with xs/ys/xr/yr and 'tt' → no warning, no error
+def test_validate_success_xy(caplog):
+    # DataFrame with xs/ys/xr/yr and 'tt' -> no warning, no error
     df = pd.DataFrame({
         "source_id": [0, 0],
         "xs": [1.0, 2.0],
@@ -36,12 +35,11 @@ def test_validate_success_xy(capsys):
         "tt": [1.5, 2.5],
     })
     validate_measurement_csv(df)
-    captured = capsys.readouterr()
-    assert captured.out == ""  # no warning printed
+    assert caplog.text == ""
 
 
 def test_validate_missing_columns():
-    # Missing both lat/lon and XY sets → must raise
+    # Missing both lat/lon and XY sets -> must raise
     df = pd.DataFrame({
         "source_id": [0],
         "tt": [1.0],
@@ -52,7 +50,7 @@ def test_validate_missing_columns():
 
 
 def test_validate_sigma_nonpositive():
-    # DataFrame where sigma contains zero or negative → must raise
+    # DataFrame where sigma contains zero or negative -> must raise
     df = pd.DataFrame({
         "source_id": [0, 1],
         "xs": [0.0, 1.0],
@@ -87,7 +85,7 @@ def test_load_measurements_csv_success(tmp_path):
 
 
 def test_load_measurements_csv_invalid(tmp_path):
-    # Write a CSV missing both XY and lat/lon → load must raise ValueError
+    # Write a CSV missing both XY and lat/lon -> load must raise ValueError
     csv_path = tmp_path / "bad.csv"
     df_bad = pd.DataFrame({
         "source_id": [0],

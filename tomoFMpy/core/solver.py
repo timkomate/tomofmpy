@@ -1,8 +1,11 @@
 from fteikpy import Eikonal2D
+import logging
 import pandas as pd
 import numpy as np
 import pyproj
+from tomoFMpy.utils import io
 
+logger = logging.getLogger(__name__)
 
 class Eikonal_Solver(Eikonal2D):
     """
@@ -19,11 +22,15 @@ class Eikonal_Solver(Eikonal2D):
         """
         # Initialize base class
         super().__init__(grid, gridsize, origin)
+        logger.debug("Initializing EikonalSolver with grid shape %s, gridsize %s", grid.shape, gridsize)
         # Load measurements
-        self.df = self._load_measurements(measurements_csv)
+        self.df = io.load_measurements_csv(measurements_csv)
+        logger.info("Loaded %d measurement rows from %s", len(self.df), measurements_csv)
         self.Cd = self._build_covariance()
+        logger.debug("Constructed covariance matrix of size %s", self.Cd.shape)
         self.traveltimes = np.zeros(len(self.df), dtype=float)
         self.base = bl_corner
+        logger.debug("Base corner set to %s", self.base)
         self.transformer = None
         self.inv_transformer = None
 
@@ -32,6 +39,7 @@ class Eikonal_Solver(Eikonal2D):
         Create pyproj transformers for converting between lat/lon and local East/North (LAEA),
         centered at the midpoint of all station coordinates (min/max of lons/lats).
         """
+        logger.debug("Initializing latitude/longitude transformers")
         lon_min = np.min([np.min(self.df["lons"]), np.min(self.df["lonr"])])
         lat_min = np.min([np.min(self.df["lats"]), np.min(self.df["latr"])])
         lon_max = np.max([np.max(self.df["lons"]), np.max(self.df["lonr"])])
@@ -43,6 +51,8 @@ class Eikonal_Solver(Eikonal2D):
         )
         self.transformer = pyproj.Transformer.from_crs(4326, crs, always_xy=True)
         self.inv_transformer = pyproj.Transformer.from_crs(crs, 4326, always_xy=True)
+        logger.info("Transformers initialized for LAEA centered at (%.4f, %.4f)", lon, lat)
+
 
     def transform_to_xy(self):
         """
@@ -51,10 +61,10 @@ class Eikonal_Solver(Eikonal2D):
         and df gains columns: xs, ys, xr, yr (in km).
         Requires self.df to have columns: lons, lats, lonr, latr.
         """
+        logger.info("Transforming lat/lon to local XY (km)")
         if self.transformer is None or self.inv_transformer is None:
             self._initialize_transformers()
         self.base = self.transformer.transform(self.base[0], self.base[1])
-        # self.TR = self.transformer.transform(self.TR[0],self.TR[1])
         Es, Ns = self.transformer.transform(self.df["lons"], self.df["lats"])
         Er, Nr = self.transformer.transform(self.df["lonr"], self.df["latr"])
         self.df["xs"] = (Es - self.base[0]) / 1000
@@ -73,6 +83,7 @@ class Eikonal_Solver(Eikonal2D):
         Returns:
             lons, lats as 1D arrays.
         """
+        logger.info("Transforming local XY (km) to lat/lon")
         if self.inv_transformer is None:
             raise RuntimeError(
                 "Inverse transformer not initialized. Call transform_to_xy() first."
@@ -90,6 +101,7 @@ class Eikonal_Solver(Eikonal2D):
         Args:
             new_grid: 2D array matching original grid shape.
         """
+        logger.debug("Updating velocity model.")
         self._grid = x
 
     def _build_covariance(self):
@@ -119,6 +131,7 @@ class Eikonal_Solver(Eikonal2D):
             df: pandas DataFrame with measurement data.
         """
         df = pd.read_csv(filepath_or_buffer=filename, dtype={"source_id": np.uint32})
+        input_validator.validate_measurement_csv(df)
         return df
 
     def _get_sources(self):
@@ -171,16 +184,19 @@ class Eikonal_Solver(Eikonal2D):
         Returns:
             List of "grid" callables (one per source).
         """
+        logger.info("Solving Eikonal for %d unique sources", len(pd.unique(self.df["source_id"])))
         sources = self._get_sources()
         self.tt = Eikonal2D.solve(
             self, sources=sources, nsweep=nsweep, return_gradient=return_gradient
         )
+        logger.debug("Eikonal solve returned %d traveltime grids", len(self.tt))
         return self.tt
 
     def calculate_traveltimes(self):
         """
         Evaluate each travel-time field at its receivers, storing results in self.traveltimes.
         """
+        logger.info("Calculating traveltimes at %d records", len(self.df))
         offset = 0
         for i, grid in enumerate(self.tt):
             points = self._get_receivers(i)
@@ -199,7 +215,7 @@ class Eikonal_Solver(Eikonal2D):
 
     def calc_residuals(self):
         """
-        Compute cost = (residual^T · Cd · residual) / N.
+        Compute cost = (residual^T * Cd * residual) / N.
 
         Returns:
             Scalar misfit value.
@@ -215,7 +231,8 @@ class Eikonal_Solver(Eikonal2D):
             filename: Path to output CSV.
         """
         self.df["tt"] = self.traveltimes
-        self.df.to_csv(filename, index=False)
+        logger.info("Saving measurements (with predicted tt) to %s", filename)
+        io.save_measurements_csv(self.df, filename)
 
     def add_noise(self, sigma, mu=0):
         """
@@ -225,5 +242,6 @@ class Eikonal_Solver(Eikonal2D):
             sigma: Standard deviation of noise.
             mu: Mean of noise (default: 0).
         """
+        logger.info("Adding Gaussian noise (mu=%.3f, sigma=%.3f) to traveltimes", mu, sigma)
         noise = np.random.normal(mu, sigma, size=(self.traveltimes.size))
         self.traveltimes += noise

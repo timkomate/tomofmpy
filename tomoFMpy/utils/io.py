@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 def validate_measurement_csv(df):
     required = ["source_id"]
@@ -14,7 +17,7 @@ def validate_measurement_csv(df):
 
     if "tt" not in df.columns:
         # Forward‐solve only; we’ll write tt out later—but warn user if they intend inversion.
-        print("Warning: CSV has no 'tt' column—forward‐solving only.")
+        logging.warning("Warning: CSV has no 'tt' column—forward. Solving only.")
 
     # If sigma exists, ensure no zeros
     if "sigma" in df.columns and (df["sigma"] <= 0).any():
