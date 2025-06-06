@@ -39,10 +39,10 @@ class Eikonal_Inversion:
             np.zeros((self.ny, self.nx)),
             gridsize=(self.dy, self.dx),
             filename=self.filename,
-            BL=BL,
+            bl_corner=BL,
         )
         if self.transform:
-            self.eik.transform2xy()
+            self.eik.transform_to_xy()
         self.save_stations()
 
     def fitness_func(self, x: np.array) -> np.float64:
@@ -155,7 +155,7 @@ class Eikonal_Inversion:
         for i in self.yaxis:
             for j in self.xaxis:
                 if self.transform:
-                    x, y = self.eik.transform2latlon(j, i)
+                    x, y = self.eik.transform_to_latlon(j, i)
                 else:
                     x, y = j, i
                 output.write(f"{x:.3f} {y:.3f} {Xi[c]:.3f}\n")

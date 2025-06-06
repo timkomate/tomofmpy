@@ -212,7 +212,7 @@ if __name__ == "__main__":
         bl_corner=(config.bl_lon, config.bl_lat),
     )
     if config.latlon:
-        eik.transform2xy()
+        eik.transform_to_xy()
 
     if config.plot:
         plot_eikonal_results(eik, config)
