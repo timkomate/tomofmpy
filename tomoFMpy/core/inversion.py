@@ -134,15 +134,6 @@ class Eikonal_Inversion:
         self.save_figure(Xi, self.Nfeval)
         self.Nfeval += 1
 
-    def callbackF_PSO(self, Xi):
-        res = self.fitness_func(Xi)
-        print(f"iteration: {self.Nfeval}, residual {res:.3f}")
-        self.residuals.append(f)
-        self.save_model(Xi, self.Nfeval)
-        self.save_model2(Xi, self.Nfeval)
-        self.save_figure(Xi, self.Nfeval)
-        self.Nfeval += 1
-
     def save_model(self, Xi, iteration):
         sol = Xi.reshape(self.ny, self.nx)
         np.savetxt(
