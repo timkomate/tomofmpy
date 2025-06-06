@@ -1,11 +1,6 @@
-import os
-import tempfile
-
 import numpy as np
 import pandas as pd
 import pytest
-
-import pyproj
 
 from tomoFMpy.core.solver import Eikonal_Solver
 
@@ -17,15 +12,18 @@ def patch_eikonal2d(monkeypatch):
     which returns 0.5 for any input points. This allows testing solve()/calculate_traveltimes()
     without requiring a real Eikonal solver.
     """
+
     def dummy_solve(self, sources=None, nsweep=None, return_gradient=False):
         class DummyGrid:
             def __call__(self, points):
                 # Return 0.5 for each receiver point
                 return np.full(len(points), 0.5, dtype=float)
+
         # Assume exactly one unique source for simplicity
         return [DummyGrid()]
 
     import fteikpy
+
     monkeypatch.setattr(fteikpy.Eikonal2D, "solve", dummy_solve)
     yield
 
@@ -36,15 +34,17 @@ def simple_csv(tmp_path):
     Create a small CSV with two receivers from a single source:
     columns: source_id, lons, lats, lonr, latr, tt, sigma
     """
-    df = pd.DataFrame({
-        "source_id": [0, 0],
-        "lons":      [10.0, 10.0],
-        "lats":      [50.0, 50.0],
-        "lonr":      [10.1, 10.0],
-        "latr":      [50.0, 50.1],
-        "tt":        [1.0, 2.0],
-        "sigma":     [2.0, 0.5],
-    })
+    df = pd.DataFrame(
+        {
+            "source_id": [0, 0],
+            "lons": [10.0, 10.0],
+            "lats": [50.0, 50.0],
+            "lonr": [10.1, 10.0],
+            "latr": [50.0, 50.1],
+            "tt": [1.0, 2.0],
+            "sigma": [2.0, 0.5],
+        }
+    )
     path = tmp_path / "measurements.csv"
     df.to_csv(path, index=False)
     return str(path)
@@ -53,12 +53,21 @@ def simple_csv(tmp_path):
 def test_load_measurements_and_covariance(simple_csv):
     grid = np.zeros((2, 2))
 
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=simple_csv, origin=None, bl_corner=(10.0, 50.0))
+    solver = Eikonal_Solver(
+        grid=grid,
+        gridsize=(1.0, 1.0),
+        measurements_csv=simple_csv,
+        origin=None,
+        bl_corner=(10.0, 50.0),
+    )
 
     # Check that df was loaded correctly
     df_loaded = solver.df
     assert "source_id" in df_loaded.columns
-    assert df_loaded.shape == (2, 7)  # 7 columns: source_id, lons, lats, lonr, latr, tt, sigma
+    assert df_loaded.shape == (
+        2,
+        7,
+    )  # 7 columns: source_id, lons, lats, lonr, latr, tt, sigma
 
     # Covariance diagonal should be [1/2.0, 1/0.5] = [0.5, 2.0]
     expected_sigma = np.array([0.5, 2.0], dtype=float)
@@ -73,7 +82,12 @@ def test_load_measurements_and_covariance(simple_csv):
 
 def test_transform_and_inverse_roundtrip(simple_csv):
     grid = np.zeros((5, 5))
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=simple_csv, bl_corner=(10.0, 50.0))
+    solver = Eikonal_Solver(
+        grid=grid,
+        gridsize=(1.0, 1.0),
+        measurements_csv=simple_csv,
+        bl_corner=(10.0, 50.0),
+    )
 
     # Before transforming, df should not have xs/ys or xr/yr
     assert "xs" not in solver.df.columns
@@ -100,7 +114,12 @@ def test_transform_and_inverse_roundtrip(simple_csv):
 
 def test_get_sources_and_receivers_after_transform(simple_csv):
     grid = np.ones((5, 5))
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=simple_csv, bl_corner=(10.0, 50.0))
+    solver = Eikonal_Solver(
+        grid=grid,
+        gridsize=(1.0, 1.0),
+        measurements_csv=simple_csv,
+        bl_corner=(10.0, 50.0),
+    )
     solver.transform_to_xy()
 
     # _get_sources should return one source (ys, xs)
@@ -120,7 +139,12 @@ def test_get_sources_and_receivers_after_transform(simple_csv):
 
 def test_solve_and_traveltimes_and_residuals(simple_csv):
     grid = np.zeros((3, 3))
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=simple_csv, bl_corner=(10.0, 50.0))
+    solver = Eikonal_Solver(
+        grid=grid,
+        gridsize=(1.0, 1.0),
+        measurements_csv=simple_csv,
+        bl_corner=(10.0, 50.0),
+    )
     solver.transform_to_xy()
 
     assert np.allclose(solver.traveltimes, 0.0)
@@ -142,10 +166,16 @@ def test_save_and_reload_measurements(tmp_path, simple_csv):
     # Copy CSV into tmp_path to avoid overwriting fixture
     dest = tmp_path / "copy.csv"
     import shutil
+
     shutil.copy(simple_csv, dest)
 
     grid = np.zeros((2, 2))
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=str(dest), bl_corner=(10.0, 50.0))
+    solver = Eikonal_Solver(
+        grid=grid,
+        gridsize=(1.0, 1.0),
+        measurements_csv=str(dest),
+        bl_corner=(10.0, 50.0),
+    )
     solver.transform_to_xy()
 
     # Manually set traveltimes
@@ -160,7 +190,12 @@ def test_save_and_reload_measurements(tmp_path, simple_csv):
 
 def test_add_noise_affects_traveltimes(simple_csv, monkeypatch):
     grid = np.zeros((3, 3))
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=simple_csv, bl_corner=(10.0, 50.0))
+    solver = Eikonal_Solver(
+        grid=grid,
+        gridsize=(1.0, 1.0),
+        measurements_csv=simple_csv,
+        bl_corner=(10.0, 50.0),
+    )
     solver.transform_to_xy()
 
     solver.traveltimes = np.array([0.5, 0.5], dtype=float)
@@ -178,20 +213,23 @@ def test_add_noise_affects_traveltimes(simple_csv, monkeypatch):
     assert solver.traveltimes.shape == (2,)
     assert np.allclose(solver.traveltimes, [0.6, 0.3])
 
+
 @pytest.fixture
 def csv_without_sigma(tmp_path):
     """
     Create a CSV that omits the sigma column entirely.
     """
-    df = pd.DataFrame({
-        "source_id": [0],
-        "lons":      [10.0],
-        "lats":      [50.0],
-        "lonr":      [10.1],
-        "latr":      [50.1],
-        "tt":        [1.0],
-        # no sigma
-    })
+    df = pd.DataFrame(
+        {
+            "source_id": [0],
+            "lons": [10.0],
+            "lats": [50.0],
+            "lonr": [10.1],
+            "latr": [50.1],
+            "tt": [1.0],
+            # no sigma
+        }
+    )
     path = tmp_path / "nosigma.csv"
     df.to_csv(path, index=False)
     return str(path)
@@ -199,7 +237,12 @@ def csv_without_sigma(tmp_path):
 
 def test_covariance_defaults_to_identity(csv_without_sigma):
     grid = np.zeros((2, 2))
-    solver = Eikonal_Solver(grid=grid, gridsize=(1.0, 1.0), measurements_csv=csv_without_sigma, bl_corner=(10.0, 50.0))
+    solver = Eikonal_Solver(
+        grid=grid,
+        gridsize=(1.0, 1.0),
+        measurements_csv=csv_without_sigma,
+        bl_corner=(10.0, 50.0),
+    )
 
     # Since there was no sigma column, Cd should be identity (size=1×1)
     assert solver.Cd.shape == (1, 1)
