@@ -47,17 +47,16 @@ class Eikonal_Solver(Eikonal2D):
         centered at the midpoint of all station coordinates (min/max of lons/lats).
         """
         logger.debug("Initializing latitude/longitude transformers")
-        lon_min = np.min([np.min(self.df["lons"]), np.min(self.df["lonr"])])
-        lat_min = np.min([np.min(self.df["lats"]), np.min(self.df["latr"])])
-        lon_max = np.max([np.max(self.df["lons"]), np.max(self.df["lonr"])])
-        lat_max = np.max([np.max(self.df["lats"]), np.max(self.df["latr"])])
-        lon = lon_min + (lon_max - lon_min) / 2
-        lat = lat_min + (lat_max - lat_min) / 2
+        lons = np.concatenate([self.df["lons"], self.df["lonr"]])
+        lats = np.concatenate([self.df["lats"], self.df["latr"]])
+        lon = lons.min() + (lons.max() - lons.min()) / 2
+        lat = lats.min() + (lats.max() - lats.min()) / 2
         crs = pyproj.CRS.from_proj4(
             f"+proj=laea +lat_0={lat} +lon_0={lon} +lat_b=0 +ellps=WGS84"
         )
         self.transformer = pyproj.Transformer.from_crs(4326, crs, always_xy=True)
         self.inv_transformer = pyproj.Transformer.from_crs(crs, 4326, always_xy=True)
+        self.base_xy = self.transformer.transform(self.base[0], self.base[1])
         logger.info(
             "Transformers initialized for LAEA centered at (%.4f, %.4f)", lon, lat
         )
@@ -72,35 +71,33 @@ class Eikonal_Solver(Eikonal2D):
         logger.info("Transforming lat/lon to local XY (km)")
         if self.transformer is None or self.inv_transformer is None:
             self._initialize_transformers()
-        self.base = self.transformer.transform(self.base[0], self.base[1])
         Es, Ns = self.transformer.transform(self.df["lons"], self.df["lats"])
         Er, Nr = self.transformer.transform(self.df["lonr"], self.df["latr"])
-        self.df["xs"] = (Es - self.base[0]) / 1000
-        self.df["ys"] = (Ns - self.base[1]) / 1000
-        self.df["xr"] = (Er - self.base[0]) / 1000
-        self.df["yr"] = (Nr - self.base[1]) / 1000
+        self.df["xs"] = (Es - self.base_xy[0]) / 1000
+        self.df["ys"] = (Ns - self.base_xy[1]) / 1000
+        self.df["xr"] = (Er - self.base_xy[0]) / 1000
+        self.df["yr"] = (Nr - self.base_xy[1]) / 1000
 
-    def transform_to_latlon(self, X, Y):
+    def transform_to_latlon(self):
         """
-        Convert local (x, y) in kilometers back to (lon, lat).
-        Requires transform_to_xy() to have been called first.
-
-        Args:
-            x_km: 1D array of x coordinates (km).
-            y_km: 1D array of y coordinates (km).
-        Returns:
-            lons, lats as 1D arrays.
+        Convert local (x, y) in self.df to lat/lon in, relative to base_corner.
+        After this call, self.base_corner is updated,
+        and df gains columns: lons, lats, lonr, latr.
+        Requires self.df to have columns: xr, yr, xs, ys.
         """
         logger.info("Transforming local XY (km) to lat/lon")
-        if self.inv_transformer is None:
-            raise RuntimeError(
-                "Inverse transformer not initialized. Call transform_to_xy() first."
-            )
+        if self.transformer is None or self.inv_transformer is None:
+            self._initialize_transformers()
 
-        lons, lats = self.inv_transformer.transform(
-            (X * 1000 + self.base[0]), (Y * 1000 + self.base[1])
+        self.df["lons"], self.df["lats"] = self.inv_transformer.transform(
+            (self.df["xs"] * 1000 + self.base_xy[0]),
+            (self.df["ys"] * 1000 + self.base_xy[1]),
         )
-        return lons, lats
+
+        self.df["lonr"], self.df["latr"] = self.inv_transformer.transform(
+            (self.df["xr"] * 1000 + self.base_xy[0]),
+            (self.df["yr"] * 1000 + self.base_xy[1]),
+        )
 
     def update_model(self, x):
         """
@@ -125,23 +122,6 @@ class Eikonal_Solver(Eikonal2D):
         np.fill_diagonal(Cd, sigma_vec)
         return Cd
 
-    def _load_measurements(self, filename):
-        """
-        Read the measurement CSV into a DataFrame.
-        Expects at least:
-          - source_id (uint32)
-          - either (xs, ys, xr, yr) OR (lons, lats, lonr, latr)
-          - optional 'tt' (observed travel time) and 'sigma'.
-
-        Args:
-            filename: Path to CSV file.
-        Returns:
-            df: pandas DataFrame with measurement data.
-        """
-        df = pd.read_csv(filepath_or_buffer=filename, dtype={"source_id": np.uint32})
-        input_validator.validate_measurement_csv(df)
-        return df
-
     def _get_sources(self):
         """
         Extract unique source locations in (ys, xs) order.
@@ -158,14 +138,14 @@ class Eikonal_Solver(Eikonal2D):
     def get_unique_stations(self, transform):
         """
         Return an array of unique receiver station coordinates.
-        If use_latlon=False, returns (xr, yr); else returns (lonr, latr).
+        If transform=False, returns (xr, yr); else returns (lonr, latr).
 
         Args:
-            use_latlon: Bool flag. If False, return local XY; otherwise lat/lon.
+            transform: Bool flag. If False, return local XY; otherwise lat/lon.
         Returns:
             stations: Nx2 numpy array of station coordinates.
         """
-        if not use_latlon:
+        if not transform:
             stations = self.df[["xr", "yr"]]
         else:
             stations = self.df[["lonr", "latr"]]
@@ -192,7 +172,7 @@ class Eikonal_Solver(Eikonal2D):
         Returns:
             List of "grid" callables (one per source).
         """
-        logger.info(
+        logger.debug(
             "Solving Eikonal for %d unique sources",
             len(pd.unique(self.df["source_id"])),
         )
@@ -207,7 +187,7 @@ class Eikonal_Solver(Eikonal2D):
         """
         Evaluate each travel-time field at its receivers, storing results in self.traveltimes.
         """
-        logger.info("Calculating traveltimes at %d records", len(self.df))
+        logger.debug("Calculating traveltimes at %d records", len(self.df))
         offset = 0
         for i, grid in enumerate(self.tt):
             points = self._get_receivers(i)

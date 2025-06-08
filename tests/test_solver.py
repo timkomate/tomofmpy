@@ -89,11 +89,13 @@ def test_transform_and_inverse_roundtrip(simple_csv):
         bl_corner=(10.0, 50.0),
     )
 
+    # Before transforming, df should have lons/lats or lonr/latr
+    for col in ("lons", "lats", "lonr", "latr"):
+        assert col in solver.df.columns
+
     # Before transforming, df should not have xs/ys or xr/yr
-    assert "xs" not in solver.df.columns
-    assert "ys" not in solver.df.columns
-    assert "xr" not in solver.df.columns
-    assert "yr" not in solver.df.columns
+    for col in ("xs", "ys", "xr", "yr"):
+        assert col not in solver.df.columns
 
     # Perform transform to local x/y
     solver.transform_to_xy()
@@ -102,15 +104,16 @@ def test_transform_and_inverse_roundtrip(simple_csv):
     for col in ("xs", "ys", "xr", "yr"):
         assert col in solver.df.columns
 
-    # Pick first source position in km
-    x_km = np.array([solver.df["xs"].iloc[0]])
-    y_km = np.array([solver.df["ys"].iloc[0]])
-    # Run inverse transform
-    lon_back, lat_back = solver.transform_to_latlon(x_km, y_km)
-    # Should approximately equal the original (10.0, 50.0)
-    assert pytest.approx(lon_back[0], rel=1e-5) == 10.0
-    assert pytest.approx(lat_back[0], rel=1e-5) == 50.0
+    orig = solver.df.copy()
 
+    # Run inverse transform
+    solver.transform_to_latlon()
+    assert np.allclose(orig, solver.df, atol = 10e-4)
+
+    solver.transform_to_xy()
+    solver.transform_to_latlon()
+
+    assert np.allclose(orig, solver.df, atol = 10e-4)
 
 def test_get_sources_and_receivers_after_transform(simple_csv):
     grid = np.ones((5, 5))
