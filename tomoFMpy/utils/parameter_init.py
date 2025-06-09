@@ -1,4 +1,5 @@
 import configparser
+import numpy as np
 
 
 class Config:
@@ -12,6 +13,8 @@ class Config:
             geom = parser["geometry"]
         except KeyError:
             raise KeyError("Missing required [geometry] section in config")
+
+        self.use_real_stations = geom.getboolean("use_real_stations")
 
         self.y = geom.getint("y")
         self.x = geom.getint("x")
@@ -43,7 +46,9 @@ class Config:
         self.v0 = vm.getfloat("v0")
 
         # tile_size is only meaningful if method=checkerboard
-        self.tile_size = vm.getint("tile_size", fallback=None)
+        self.tile_size = np.fromstring(
+            vm.get("tile_size", fallback=None), dtype=int, sep=","
+        )
         if self.method == "checkerboard" and self.tile_size is None:
             raise KeyError("Missing 'tile_size' for checkerboard method")
 

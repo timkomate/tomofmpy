@@ -7,9 +7,10 @@ import PIL.Image
 import PIL.ImageOps
 from tomoFMpy.core import solver
 from tomoFMpy.utils.parameter_init import Config
+import tomoFMpy.utils.plotting
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
@@ -20,20 +21,28 @@ def checkerboard(shape, tile_size):
     Generate a checkerboard pattern with the specified shape and tile size.
 
     Args:
-        shape (tuple): Shape of the checkerboard grid.
-        tile_size (int): Size of each tile in the checkerboard.
+        shape (tuple of int): (ny, nx) shape of the checkerboard grid.
+        tile_size (int or tuple of int): If an int, tiles are square of that size.
+            If a tuple (ty, tx), tiles are ty rows high and tx columns wide.
 
     Returns:
-        ndarray: Checkerboard pattern.
-
+        ndarray of shape `shape`, values 0 or 1 in a checkerboard.
     """
-    logger.debug(
-        "Generating checkerboard pattern with shape %s and tile size %s",
-        shape,
-        tile_size,
-    )
-    idx = np.indices(shape)
-    return ((idx // tile_size).sum(axis=0)) % 2
+    # unpack shape
+    ny, nx = shape
+
+    # allow scalar or (ty, tx)
+    if isinstance(tile_size, int):
+        ty = tx = tile_size
+    else:
+        ty, tx = tile_size
+
+    # get row and column indices
+    rows, cols = np.indices((ny, nx))
+
+    # integer‐divide by tile size, sum, mod 2
+    board = ((rows // ty) + (cols // tx)) % 2
+    return board
 
 
 def read_image(filepath, dv, v0):
@@ -42,7 +51,7 @@ def read_image(filepath, dv, v0):
 
     Args:
         filepath (str): Path to the image file.
-        dv (float): Velocity increment (maps 0–255 to 0–dv).
+        dv (float): Velocity increment (maps 0-255 to 0-dv).
         v0 (float): Base velocity (added to scaled pixel values).
 
     Returns:
@@ -100,7 +109,6 @@ def random_geometry(config):
 
     Returns:
         DataFrame: Random geometry data.
-
     """
     np.random.seed(config.seed)
 
@@ -123,43 +131,7 @@ def random_geometry(config):
     else:
         columns = ["source_id", "xs", "ys", "xr", "yr", "sigma"]
     df = pd.DataFrame(data, columns=columns)
-    df.to_csv(config.fname, index=False)
-    logger.info("Saved geometry to %s", config.fname)
     return df
-
-
-def plot_eikonal_results(eik, config: Config) -> None:
-    """
-    If enabled, plot the speed grid and ray paths/scatter of sources and receivers.
-
-    Args:
-        eik: An instance of tomo_eikonal.Eikonal_Solver after running solve().
-        config (Config): Configuration object with xmin, xmax, ymin, ymax.
-    """
-    logger.info("Plotting eikonal output")
-    fig, ax = plt.subplots()
-    mesh = ax.pcolor(eik.xaxis, eik.zaxis, eik.grid)
-    plt.colorbar(mesh, ax=ax)
-    ax.set_aspect("equal", adjustable="box")
-    plt.title("Velocity Grid (Eikonal Solver)")
-    plt.show()
-
-    fig, ax = plt.subplots()
-    mesh = ax.pcolor(eik.xaxis, eik.zaxis, eik.grid, shading="auto")
-    plt.colorbar(mesh, ax=ax)
-    # Scatter source and receiver locations
-    df = eik.df
-    if config.latlon:
-        ax.scatter(df["lons"], df["lats"], marker="h", c="k", label="Sources")
-        ax.scatter(df["lonr"], df["latr"], marker="^", c="r", label="Receivers")
-    else:
-        ax.scatter(df["xs"], df["ys"], marker="h", c="k", label="Sources")
-        ax.scatter(df["xr"], df["yr"], marker="^", c="r", label="Receivers")
-    ax.set_xlim(config.xmin, config.xmax)
-    ax.set_ylim(config.ymin, config.ymax)
-    plt.title("Sources (black) and Receivers (red)")
-    plt.legend(loc="upper right")
-    plt.show()
 
 
 if __name__ == "__main__":
@@ -197,8 +169,13 @@ if __name__ == "__main__":
         )
 
     # Generate random geometry
-    logger.info("Generating random geometry")
-    geometry_df = random_geometry(config)
+    if not config.use_real_stations:
+        logger.info("Generating random geometry")
+        geometry_df = random_geometry(config)
+        geometry_df.to_csv(config.fname, index=False)
+        logger.info("Saved geometry to %s", config.fname)
+    else:
+        logger.info("Using real station geometry")
 
     ny, nx = velocity_model.shape
     dx = config.x / nx
@@ -215,7 +192,23 @@ if __name__ == "__main__":
         eik.transform_to_xy()
 
     if config.plot:
-        plot_eikonal_results(eik, config)
+        tomoFMpy.utils.plotting.plot_model_with_stations(
+            eik.xaxis,
+            eik.zaxis,
+            eik.grid,
+            eik.df["xs"],
+            eik.df["ys"],
+            eik.df["xr"],
+            eik.df["yr"],
+            "synthetic_velocity_model.png",
+        )
+
+        if config.latlon:
+            tomoFMpy.utils.plotting.plot_model_map(
+                eik,
+                eik.grid,
+                "synthetic_velocity_model_map.png",
+            )
 
     eik.solve()
     eik.calculate_traveltimes()
