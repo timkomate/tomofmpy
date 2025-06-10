@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 
 
 def validate_measurement_csv(df):
-    required = ["source_id"]
     if {"lons", "lats", "lonr", "latr"}.issubset(df.columns):
         pass
     elif {"xs", "ys", "xr", "yr"}.issubset(df.columns):
@@ -17,7 +16,6 @@ def validate_measurement_csv(df):
         )
 
     if "tt" not in df.columns:
-        # Forward‐solve only; we’ll write tt out later—but warn user if they intend inversion.
         logging.warning("Warning: CSV has no 'tt' column—forward. Solving only.")
 
     # If sigma exists, ensure no zeros
