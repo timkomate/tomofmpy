@@ -5,3 +5,4 @@ Pillow
 fteikpy
 scipy
 pyproj
+cartopy
