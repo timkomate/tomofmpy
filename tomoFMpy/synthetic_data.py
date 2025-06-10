@@ -32,7 +32,7 @@ def checkerboard(shape, tile_size):
     ny, nx = shape
 
     # allow scalar or (ty, tx)
-    if isinstance(tile_size, int):
+    if tile_size.size < 2:
         ty = tx = tile_size
     else:
         ty, tx = tile_size
