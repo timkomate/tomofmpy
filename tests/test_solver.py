@@ -108,12 +108,13 @@ def test_transform_and_inverse_roundtrip(simple_csv):
 
     # Run inverse transform
     solver.transform_to_latlon()
-    assert np.allclose(orig, solver.df, atol = 10e-4)
+    assert np.allclose(orig, solver.df, atol=10e-4)
 
     solver.transform_to_xy()
     solver.transform_to_latlon()
 
-    assert np.allclose(orig, solver.df, atol = 10e-4)
+    assert np.allclose(orig, solver.df, atol=10e-4)
+
 
 def test_get_sources_and_receivers_after_transform(simple_csv):
     grid = np.ones((5, 5))

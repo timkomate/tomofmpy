@@ -153,6 +153,7 @@ def test_calc_perturbation_and_roughness(measurement_csv, tmp_path):
     rough = inv._roughness(ones)
     assert pytest.approx(rough, rel=1e-8) == 0.0
 
+
 def test_misfit_no_reg(tmp_path, measurement_csv):
     # Create minimal CSV
     pd.DataFrame(
@@ -182,6 +183,7 @@ def test_misfit_no_reg(tmp_path, measurement_csv):
     misfit = inv.misfit(np.array([1.0]))
     # data cost constant=4.0 => sqrt(4.0)
     assert misfit == pytest.approx(np.sqrt(4.0))
+
 
 def test_misfit_with_reg(tmp_path, measurement_csv):
     # Create minimal CSV
@@ -213,6 +215,7 @@ def test_misfit_with_reg(tmp_path, measurement_csv):
     # data cost=4, pert=(1-0)^2=1 => sqrt(5)
     assert misfit == pytest.approx(np.sqrt(5.0))
 
+
 def test_run_linear_no_x0(tmp_path, measurement_csv):
     # Create minimal CSV
     pd.DataFrame(
@@ -241,6 +244,7 @@ def test_run_linear_no_x0(tmp_path, measurement_csv):
     with pytest.raises(RuntimeError):
         inv.run_linear()
 
+
 def test_save_model_csv(tmp_path, measurement_csv):
     rf = tmp_path / "out6"
     inv = Eikonal_Inversion(
@@ -255,7 +259,7 @@ def test_save_model_csv(tmp_path, measurement_csv):
     )
     vec = np.array([1.23])
     inv._save_model_csv(vec, 5)
-    loaded = np.loadtxt(rf / '5.csv', delimiter=',')
+    loaded = np.loadtxt(rf / "5.csv", delimiter=",")
     assert loaded == pytest.approx(1.23)
 
 
@@ -274,8 +278,8 @@ def test_save_model_xyz_no_latlon(tmp_path):
     inv.use_latlon = False
     vec = np.array([1.23])
     inv._save_model_xyz(vec, 3)
-    lines = (rf / '3.xyz').read_text().splitlines()
-    assert lines == ['0.000 0.000 1.230']
+    lines = (rf / "3.xyz").read_text().splitlines()
+    assert lines == ["0.000 0.000 1.230"]
 
 
 def test_save_model_png(tmp_path):
@@ -292,7 +296,7 @@ def test_save_model_png(tmp_path):
     )
     vec = np.array([1.0])
     inv._save_model_png(vec, 2)
-    assert (rf / '2.png').exists()
+    assert (rf / "2.png").exists()
 
 
 def test_save_station_files(tmp_path):
@@ -311,9 +315,9 @@ def test_save_station_files(tmp_path):
     stations = np.array([[0.0, 0.0], [2.0, 0.0], [2.0, 2.0], [0.0, 2.0]])
     inv.solver.get_unique_stations = lambda use_latlon: stations
     inv._save_station_files()
-    saved = np.loadtxt(rf / 'stations.xy')
+    saved = np.loadtxt(rf / "stations.xy")
     assert np.allclose(saved, stations)
-    hull = np.loadtxt(rf / 'hull.xy')
+    hull = np.loadtxt(rf / "hull.xy")
     # hull vertices count matches
     assert hull.shape[0] == 4
 

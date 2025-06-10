@@ -23,7 +23,7 @@ setuptools.setup(
         "Pillow",
         "scipy",
         "fteikpy",
-        "cartopy"
+        "cartopy",
     ],
     include_package_data=False,
     classifiers=[

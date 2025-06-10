@@ -181,7 +181,9 @@ def plot_model_map(
     )
 
     # Plot data
-    mesh = ax.pcolormesh(Lon, Lat, grid, transform=proj, shading="auto", cmap="viridis")
+    mesh = ax.pcolormesh(
+        Lon, Lat, grid, transform=proj, shading="auto", cmap="seismic_r"
+    )
 
     # Add gridlines with labels
     gl = ax.gridlines(

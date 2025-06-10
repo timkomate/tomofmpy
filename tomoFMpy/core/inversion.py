@@ -137,7 +137,8 @@ class Eikonal_Inversion:
                 for x in self.xaxis:
                     if self.use_latlon:
                         lon, lat = self.solver.inv_transformer.transform(
-                            x * 1000 + self.solver.base_xy[0], y * 1000 + self.solver.base_xy[1]
+                            x * 1000 + self.solver.base_xy[0],
+                            y * 1000 + self.solver.base_xy[1],
                         )
                         f.write(f"{lon:.3f} {lat:.3f} {flat[idx]:.3f}\n")
                     else:
