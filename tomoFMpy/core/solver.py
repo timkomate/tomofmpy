@@ -1,8 +1,10 @@
-from fteikpy import Eikonal2D
 import logging
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 import pyproj
+from fteikpy import Eikonal2D
+
 from tomoFMpy.utils import io
 
 logger = logging.getLogger(__name__)
@@ -214,15 +216,20 @@ class Eikonal_Solver(Eikonal2D):
         res = self.get_residuals()
         return float((res @ self.Cd @ res) / len(res))
 
-    def save_measurements(self, filename):
+    def save_measurements(self, filename, field_name="tt"):
         """
         Write predicted travel times back into self.df['tt'] and overwrite CSV.
 
         Args:
             filename: Path to output CSV.
+            field_name: Column name to store the traveltime values.
         """
-        self.df["tt"] = self.traveltimes
-        logger.info("Saving measurements (with predicted tt) to %s", filename)
+        self.df[field_name] = self.traveltimes
+        logger.info(
+            "Saving measurements (with predicted traveltimes in column %s) to %s",
+            field_name,
+            filename,
+        )
         io.save_measurements_csv(self.df, filename)
 
     def add_noise(self, sigma, mu=0):
