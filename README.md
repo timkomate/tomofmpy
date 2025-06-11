@@ -2,7 +2,7 @@
 
 Python code for 2D traveltime inversion.
 
-The TomoFMpy is a program that solves the Eikonal equation for a given velocity model and can fit a 2D velocity model to traveltime data. It can generate a velocity model (using a checkerboard pattern or an image file) and random source-receiver geometry based on the provided configuration. 
+The TomoFMpy is a program that solves the Eikonal equation for a given velocity model and can fit a 2D velocity model to traveltime data. It can generate a velocity model (using a checkerboard pattern or an image file) and random source-receiver geometry based on the provided configuration.
 
 ## Prerequisites
 
@@ -93,4 +93,3 @@ This software is licensed under the MIT License.
 ### Acknowledgments
 
 For any questions or issues, please contact [timko.mate@gmail.com](mailto:timko.mate@gmail.com).
-

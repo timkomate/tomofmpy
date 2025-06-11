@@ -4,6 +4,7 @@ import pytest
 
 from tomoFMpy.core.solver import Eikonal_Solver
 
+
 # Monkey‐patch fteikpy.Eikonal2D.solve so it returns a dummy grid that yields constant travel times
 @pytest.fixture(autouse=True)
 def patch_eikonal2d(monkeypatch):

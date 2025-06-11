@@ -1,20 +1,18 @@
-import os
-import tempfile
 import numpy as np
 import pandas as pd
 import pytest
 
-from scipy.spatial import ConvexHull
-
 from tomoFMpy.core.inversion import Eikonal_Inversion
+
 
 # Monkey‐patch the underlying Eikonal_Solver.solve and related methods
 # to avoid needing a real Eikonal2D solver.
 @pytest.fixture(autouse=True)
 def patch_eikonal_solver(monkeypatch):
     """
-    Replace Eikonal_Solver.solve(), calculate_traveltimes(), and calc_residuals()
-    with minimal stubs so that inversion logic can run deterministically.
+    Replace Eikonal_Solver.solve(), calculate_traveltimes(), and
+    calc_residuals() with minimal stubs so that inversion logic
+    can run deterministically.
     """
 
     class DummySolver:

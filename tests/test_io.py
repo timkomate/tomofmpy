@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import pytest
-import os
 
 from tomoFMpy.utils.io import (
     validate_measurement_csv,
