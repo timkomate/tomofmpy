@@ -1,12 +1,14 @@
 import argparse
 import logging
+
 import numpy as np
 import pandas as pd
 import PIL.Image
 import PIL.ImageOps
+
+import tomoFMpy.utils.plotting
 from tomoFMpy.core import solver
 from tomoFMpy.utils.parameter_init import Config
-import tomoFMpy.utils.plotting
 
 logging.basicConfig(
     level=logging.INFO,

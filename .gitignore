@@ -13,3 +13,4 @@ real_data*
 !images/*
 *.ipynb
 main*
+.vscode

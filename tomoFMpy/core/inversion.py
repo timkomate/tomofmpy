@@ -1,8 +1,9 @@
+import logging
 import os
+
 import numpy as np
 import scipy.optimize
 from scipy.spatial import ConvexHull
-import logging
 
 from tomoFMpy.core.solver import Eikonal_Solver
 from tomoFMpy.utils.plotting import plot_model_grid
