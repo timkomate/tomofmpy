@@ -175,9 +175,9 @@ class Eikonal_Inversion:
         self._on_iteration(self.x0, self.misfit(self.x0), self.Nfeval)
 
         def cb(xk):
+            self.Nfeval += 1
             cost = self.misfit(xk)
             self._on_iteration(xk, cost, self.Nfeval)
-            self.Nfeval += 1
 
         result = scipy.optimize.minimize(
             fun=lambda v: self.misfit(v), x0=self.x0, callback=cb, *args, **kwargs
