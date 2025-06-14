@@ -50,19 +50,3 @@ def save_measurements_csv(df, path):
         filename: Path to output CSV.
     """
     df.to_csv(path, index=False)
-
-
-def load_start_model(path, use_file, nx, ny, const):
-    if use_file:
-        if not path:
-            raise ValueError("use_start_file is True but no start_model path provided")
-        logger.info("Loading starting model from %s", path)
-        grid = np.loadtxt(path, delimiter=",")
-        if grid.shape != (ny, nx):
-            raise ValueError(
-                f"Starting model shape {grid.shape} does not match ({ny}, {nx})"
-            )
-    else:
-        logger.info("Using constant starting model: %.3f", const)
-        grid = np.full((ny, nx), const, dtype=float)
-    return grid
