@@ -34,14 +34,14 @@ def main():
 
     if cfg.use_start_file:
         logger.info("Loading starting model from %s", cfg.start_model)
-        grid = np.loadtxt(cfg.start_model, delimiter=",")
-        if grid.shape != (cfg.ny, cfg.nx):
+        start_grid = np.loadtxt(cfg.start_model, delimiter=",")
+        if start_grid.shape != (cfg.ny, cfg.nx):
             raise ValueError(
                 f"Starting model shape {grid.shape} does not match ({cfg.ny}, {cfg.nx})"
             )
     else:
         logger.info("Using constant starting model: %.3f", cfg.const)
-        grid = np.full((cfg.ny, cfg.nx), cfg.const, dtype=float)
+        start_grid = np.full((cfg.ny, cfg.nx), cfg.const, dtype=float)
 
     inv = Eikonal_Inversion(
         modelspace=(cfg.y, cfg.x),
