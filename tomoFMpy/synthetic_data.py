@@ -8,7 +8,7 @@ import PIL.ImageOps
 
 import tomoFMpy.utils.plotting
 from tomoFMpy.core import solver
-from tomoFMpy.utils.parameter_init import Config
+from tomoFMpy.utils.parameter_init import SyntheticConfig
 
 logging.basicConfig(
     level=logging.INFO,
@@ -77,7 +77,7 @@ def build_source_boundary(config):
     Create source coordinates along the rectangular boundary defined in config.
 
     Args:
-        config (Config): Configuration object with xmin, xmax, ymin, ymax, nsrc.
+        config (SyntheticConfig): Configuration object with xmin, xmax, ymin, ymax, nsrc.
 
     Returns:
         np.ndarray: Array of shape (N, 2) of (x, y) source positions.
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     logger.info("Using config file: %s", args.config)
 
     # Parse the config file
-    config = Config(args.config)
+    config = SyntheticConfig(args.config)
     logger.debug(config)
 
     # Generate velocity model

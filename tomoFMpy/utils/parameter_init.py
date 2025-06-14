@@ -3,7 +3,7 @@ import configparser
 import numpy as np
 
 
-class Config:
+class SyntheticConfig:
     def __init__(self, config_file):
         parser = configparser.ConfigParser()
         read_files = parser.read(config_file)
@@ -80,4 +80,53 @@ class Config:
             f"velocity_model: method={self.method}, dv={self.dv}, v0={self.v0}, "
             f"tile_size={self.tile_size}, image_path={self.image_path}; "
             f"general: seed={self.seed}, fname='{self.fname}', noise={self.noise})"
+        )
+
+
+class RealConfig:
+    """Configuration for real-data inversion."""
+
+    def __init__(self, config_file: str):
+        parser = configparser.ConfigParser()
+        read_files = parser.read(config_file)
+        if not read_files:
+            raise FileNotFoundError(f"Config file not found: {config_file}")
+
+        try:
+            inv = parser["inversion"]
+            geom = parser["geometry"]
+        except KeyError as exc:
+            raise KeyError("Missing required section in config") from exc
+
+        self.measurements = inv.get("measurements")
+        if not self.measurements:
+            raise KeyError("Missing 'measurements' in [inversion]")
+
+        self.output = inv.get("output", fallback="inv_results")
+        self.epsilon = inv.getfloat("epsilon", fallback=0.0)
+        self.eta = inv.getfloat("eta", fallback=0.0)
+        self.use_start_file = inv.getboolean("use_start_file", fallback=False)
+        self.start_model = inv.get("start_model", fallback=None)
+        self.start_const = inv.getfloat("start_const", fallback=0.0)
+        if self.use_start_file and not self.start_model:
+            raise KeyError("use_start_file is True but 'start_model' path not provided")
+        self.method = inv.get("method", fallback="L-BFGS-B")
+        self.maxiter = inv.getint("maxiter", fallback=10)
+
+        self.y = geom.getfloat("y")
+        self.x = geom.getfloat("x")
+        self.ny = geom.getint("ny")
+        self.nx = geom.getint("nx")
+        self.latlon = geom.getboolean("latlon", fallback=False)
+        self.bl_lon = geom.getfloat("bl_lon", fallback=0.0)
+        self.bl_lat = geom.getfloat("bl_lat", fallback=0.0)
+
+    def __repr__(self) -> str:
+        return (
+            f"RealConfig(inversion: measurements='{self.measurements}', output='{self.output}',"
+            f" epsilon={self.epsilon}, eta={self.eta}, use_start_file={self.use_start_file},"
+            f" start_model='{self.start_model}', start_const={self.start_const},"
+            f" method='{self.method}', maxiter={self.maxiter};"
+            f" geometry: y={self.y}, x={self.x}, ny={self.ny}, nx={self.nx},"
+            f" latlon={self.latlon}, bl_lon={self.bl_lon}, bl_lat={self.bl_lat})"
         )
