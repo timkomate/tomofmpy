@@ -25,6 +25,7 @@ repos:
         entry: pytest
         language: system
         pass_filenames: false
+        stages: [push]
         always_run: true
   # - repo: https://github.com/pycqa/flake8.git
   #   rev: 6.0.0
