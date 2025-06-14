@@ -37,7 +37,7 @@ def main():
         start_grid = np.loadtxt(cfg.start_model, delimiter=",")
         if start_grid.shape != (cfg.ny, cfg.nx):
             raise ValueError(
-                f"Starting model shape {grid.shape} does not match ({cfg.ny}, {cfg.nx})"
+                f"Starting model shape {start_grid.shape} does not match ({cfg.ny}, {cfg.nx})"
             )
     else:
         logger.info("Using constant starting model: %.3f", cfg.const)
