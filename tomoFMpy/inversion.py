@@ -40,8 +40,8 @@ def main():
                 f"Starting model shape {start_grid.shape} does not match ({cfg.ny}, {cfg.nx})"
             )
     else:
-        logger.info("Using constant starting model: %.3f", cfg.const)
-        start_grid = np.full((cfg.ny, cfg.nx), cfg.const, dtype=float)
+        logger.info("Using constant starting model: %.3f", cfg.start_const)
+        start_grid = np.full((cfg.ny, cfg.nx), cfg.start_const, dtype=float)
 
     inv = Eikonal_Inversion(
         modelspace=(cfg.y, cfg.x),
