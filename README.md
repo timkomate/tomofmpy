@@ -1,64 +1,90 @@
-# tomofmpy
+# TomoFMpy
 
-Python code for 2D traveltime inversion.
+TomoFMpy is a small research code for forward modelling and inverting seismic traveltimes in two dimensions.  It uses the Eikonal equation to compute first-arrival travel times through a velocity model and provides tools for building synthetic data sets as well as for performing linearized traveltime inversion.
 
-The TomoFMpy is a program that solves the Eikonal equation for a given velocity model and can fit a 2D velocity model to traveltime data. It can generate a velocity model (using a checkerboard pattern or an image file) and random source-receiver geometry based on the provided configuration.
+---
 
-## Prerequisites
+## Table of Contents
 
-- Python 3.7 or higher
-- Required Python packages: numpy, pandas, matplotlib, Pillow
+1. [Overview](#overview)
+2. [Installation](#installation)
+3. [Repository Structure](#repository-structure)
+4. [Synthetic Data Generation](#synthetic-data-generation)
+5. [Eikonal Solver](#eikonal-solver)
+6. [Traveltime Inversion](#traveltime-inversion)
+7. [Configuration Files](#configuration-files)
+8. [Figures](#figures)
+9. [Testing](#testing)
+10. [License](#license)
+11. [Acknowledgments](#acknowledgments)
+
+---
+
+## Overview
+
+TomoFMpy solves the **Eikonal equation**
+
+\[ \left|\nabla T(x,y)\right| = \frac{1}{v(x,y)} \]
+
+on a regular grid, where `T` is traveltime and `v` is the seismic velocity.  Given a velocity model, source locations and receiver locations, the package calculates traveltimes and optionally inverts for `v` using linearized least squares with optional regularization.
+
+The inversion minimizes the cost function
+
+\[
+\phi(m) =  {r^{\top} C_{d} r + \epsilon\,\Vert m-m_{0}\Vert^{2} + \eta\, m^{\top} D m }
+\]
+
+where `r` are traveltime residuals, `C_d` is the data covariance, `m` is the model vector, `m_0` a starting model, and `D` the 2D discrete Laplacian matrix.  The parameters $\epsilon$ and $\eta$ control the perturbation and roughness penalties respectively.
 
 ## Installation
 
-1. Clone the TomoFMpy repository from GitHub:
+1. Clone this repository
 
-```shell
-git clone https://github.com/timkomate/tomofmpy.git
-```
-2. Install the required Python packages using pip:
+   ```bash
+   git clone https://github.com/timkomate/tomofmpy.git
+   cd tomofmpy
+   ```
 
-```
-pip install -r requirements.txt
-```
+2. Install the Python requirements
 
-## Synthetic Data Generation
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-The synthetic data generation module (synthetic_data.py) in TomoFMpy allows users to generate synthetic seismic data for testing and experimentation. This module includes functionality to generate random geometry and create velocity models using a checkerboard pattern or image files.
-
-
-
-### Usage
-
-1. Prepare a configuration file with the desired parameters for synthetic data generation. See the provided `config/synthetic_config.ini` file for reference.
-
-2. Run the `synthetic_data.py` script to generate the synthetic data:
+## Repository Structure
 
 ```
-python main.py --config config/synthetic_config.ini
+configs/          Example configuration files
+images/           Placeholder for figures used in this README
+tests/            Pytest unit tests
+README.md         Project documentation
+setup.py          Packaging information
+tomoFMpy/         Python source code
 ```
 
-3. The generated synthetic data will be saved to the specified output files.
+The main modules inside `tomoFMpy` are:
 
-### Plots
+- `synthetic_data.py` – utilities to build synthetic velocity models and source/receiver geometries.
+- `inversion.py` – command line interface for performing traveltime inversion on real data.
+- `core/solver.py` – wrapper around `fteikpy.Eikonal2D` for computing traveltimes.
+- `core/inversion.py` – linearized inversion driver implementing the cost function above.
+- `utils/` – small helper modules for I/O, plotting and configuration parsing.
 
-After running the synthetic_data.py script, the following plots can be produced:
+## Configuration files
 
-1. Checkerboard case
+TomoFMpy uses configuration files in `INI` format. Example templates are
+located in the `configs` folder. Two configurations are provided:
 
-![Plot](images/Figure_1.png)
+1. `synthetic_config.ini` for creating synthetic measurements.
+2. `inversion.ini` for running the inversion on an existing data set.
 
-This plot shows the generated grid with the calculated travel times. The black dots represent the sources, and the red triangles represent the receivers.
+Both files share a similar structure with named sections and `key = value`
+pairs. Below is an overview of the most important options.
 
-2. Image case
+### Synthetic data (`synthetic_config.ini`)
 
-![Plot](images/Figure_2.png)
-
-These plots provide visual representations of the synthetic data generated and can be used for analysis and further processing.
-
-### Configuration
-
-The synthetic_config.ini file is used to customize the synthetic data generation process. The following parameters can be adjusted:
+The options in this file control the geometry and the velocity model used to
+generate synthetic traveltimes.  The main sections and their parameters are:
 
 - **[geometry]**
   - `y`: Dimensions of the grid along the y-axis.
@@ -82,14 +108,86 @@ The synthetic_config.ini file is used to customize the synthetic data generation
 - **[general]**
   - `seed`: Seed for the random number generator.
   - `fname`: Output file name for the generated synthetic dataset.
-  - `noise`: Standard deviation gaussian noise added to the synthetic traveltime
+  - `noise`: Standard deviation gaussian noise added to the synthetic traveltime.
+
+## Synthetic Data Generation
+
+The script `tomoFMpy/synthetic_data.py` can create a velocity model and random geometry for testing.  Two options are available:
+
+1. **Checkerboard model** – alternating high and low velocity tiles.
+2. **Image based model** – convert pixel values from an image into velocities.
+
+Example usage:
+
+```bash
+python -m tomoFMpy.synthetic_data --config configs/synthetic_config.ini
+```
+
+## Eikonal Solver
+
+`core/solver.py` subclasses `fteikpy.Eikonal2D`.  It reads a CSV file containing measurement geometry and optional observed traveltimes.  Stations may be specified either in local Cartesian coordinates (`xs`, `ys`, `xr`, `yr`) or in geographic coordinates (`lons`, `lats`, `lonr`, `latr`).  Geographic data are transformed to local coordinates using an azimuthal equal–area projection.
+
+After setting up the grid spacing, calling `solve()` computes the traveltime field for each unique source.  Traveltimes at receiver positions are then extracted with `calculate_traveltimes()`.  Gaussian noise can be added via `add_noise()` for synthetic experiments.
+
+1. **Checkerboard Model Example**
+
+   ![Velocity Model](images/Figure_1.png)
+
+   Figure 1: Generated checkerboard velocity field used for the forward problem.
+
+## Traveltime Inversion
+
+### Inversion (`inversion.ini`)
+
+This configuration defines the parameters for the traveltime inversion itself.
+
+- **[inversion]**
+  - `measurements`: Path to the CSV file containing observed travel times.
+  - `output`: Folder where inversion results will be saved.
+  - `epsilon`: Weight for the damping (model perturbation) term.
+  - `eta`: Weight for the roughness regularization term.
+  - `use_start_file`: Set to `True` to initialize with `start_model` instead of `start_const`.
+  - `start_model`: Optional CSV file with a starting model.
+  - `start_const`: Constant starting value when no file is provided.
+  - `method`: Optimization method passed to `scipy.optimize.minimize`.
+  - `maxiter`: Maximum number of iterations of the minimizer.
+
+- **[geometry]**
+  - `y`, `x`: Physical dimensions of the model (km).
+  - `ny`, `nx`: Number of grid nodes along each axis.
+  - `latlon`: Treat coordinates as latitude/longitude if `True`.
+  - `bl_lon`, `bl_lat`: Bottom-left corner coordinates when using lat/lon.
+
+The class `core.inversion.Eikonal_Inversion` implements a simple linearized inversion.  After supplying a starting model with `add_starting_model()`, call `run_linear()` to minimise the misfit using `scipy.optimize.minimize`.  On each iteration the current model, an XYZ representation and a PNG image are written to the chosen output folder.  Residual history is also stored so it can be plotted later.
+
+A typical command line invocation is:
+
+```bash
+python -m tomoFMpy.inversion --config configs/inversion.ini
+```
+
+The inversion configuration describes the grid size, location of the measurement CSV, regularization weights and optimisation method (e.g. L-BFGS-B).
+
+1. **Checkerboard Model Inversion Example**
+
+   ![Velocity Model](images/Figure_3.png)
+
+   Figure 2: The resulting inverted velocity field using the 2D linearized inversion.
 
 
+## Testing
 
-### License
+Unit tests are located in the `tests/` folder and require `pytest`.
+Run them from the repository root with:
 
-This software is licensed under the MIT License.
+```bash
+pytest -q
+```
 
-### Acknowledgments
+## License
 
-For any questions or issues, please contact [timko.mate@gmail.com](mailto:timko.mate@gmail.com).
+This project is released under the terms of the MIT License.  See [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+For questions or feedback please contact [timko.mate@gmail.com](mailto:timko.mate@gmail.com).
