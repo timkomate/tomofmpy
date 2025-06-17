@@ -123,6 +123,16 @@ Example usage:
 python -m tomoFMpy.synthetic_data --config configs/synthetic_config.ini
 ```
 
+A minimal measurement CSV for this script could contain:
+
+```csv
+source_id,xs,ys,xr,yr,tt,sigma
+0,0.0,0.0,1.0,1.0,0.5,0.01
+```
+
+Set `latlon=True` in the configuration to use `lons,lats,lonr,latr` columns
+instead of `xs,ys,xr,yr`.
+
 ## Eikonal Solver
 
 `core/solver.py` subclasses `fteikpy.Eikonal2D`.  It reads a CSV file containing measurement geometry and optional observed traveltimes.  Stations may be specified either in local Cartesian coordinates (`xs`, `ys`, `xr`, `yr`) or in geographic coordinates (`lons`, `lats`, `lonr`, `latr`).  Geographic data are transformed to local coordinates using an azimuthal equal–area projection.
@@ -134,6 +144,12 @@ After setting up the grid spacing, calling `solve()` computes the traveltime fie
    ![Velocity Model](images/Figure_1.png)
 
    Figure 1: Generated checkerboard velocity field used for the forward problem.
+
+2. **Image based Model Example**
+
+   ![Velocity Model](images/Figure_2.png)
+
+   Figure 2: Image based velocity field used for the forward problem.
 
 ## Traveltime Inversion
 
@@ -172,8 +188,25 @@ The inversion configuration describes the grid size, location of the measurement
 
    ![Velocity Model](images/Figure_3.png)
 
-   Figure 2: The resulting inverted velocity field using the 2D linearized inversion.
+   *Figure 3: The resulting inverted velocity field from the 2D linearized inversion.*
 
+## Quick Start
+
+Run the following commands to get started:
+
+1. Generate synthetic data:
+
+   ```bash
+   python -m tomoFMpy.synthetic_data --config configs/synthetic_config.ini
+   ```
+
+2. Run the inversion:
+
+   ```bash
+   python -m tomoFMpy.inversion --config configs/inversion.ini
+   ```
+
+3. View the results in the output directory specified in the inversion configuration.
 
 ## Testing
 
