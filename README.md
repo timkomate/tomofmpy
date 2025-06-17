@@ -24,15 +24,15 @@ TomoFMpy is a small research code for forward modelling and inverting seismic tr
 
 TomoFMpy solves the **Eikonal equation**
 
-\[ \left|\nabla T(x,y)\right| = \frac{1}{v(x,y)} \]
+$$ \left|\nabla T(x,y)\right| = \frac{1}{v(x,y)} $$
 
 on a regular grid, where `T` is traveltime and `v` is the seismic velocity.  Given a velocity model, source locations and receiver locations, the package calculates traveltimes and optionally inverts for `v` using linearized least squares with optional regularization.
 
 The inversion minimizes the cost function
 
-\[
+$$
 \phi(m) =  {r^{\top} C_{d} r + \epsilon\,\Vert m-m_{0}\Vert^{2} + \eta\, m^{\top} D m }
-\]
+$$
 
 where `r` are traveltime residuals, `C_d` is the data covariance, `m` is the model vector, `m_0` a starting model, and `D` the 2D discrete Laplacian matrix.  The parameters $\epsilon$ and $\eta$ control the perturbation and roughness penalties respectively.
 
@@ -189,6 +189,12 @@ The inversion configuration describes the grid size, location of the measurement
    ![Velocity Model](images/Figure_3.png)
 
    *Figure 3: The resulting inverted velocity field from the 2D linearized inversion.*
+
+1. **Image Based Model Inversion Example**
+
+   ![Velocity Model](images/Figure_3.png)
+
+   *Figure 4: The resulting inverted velocity field from the 2D linearized inversion.*
 
 ## Quick Start
 
