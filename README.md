@@ -31,7 +31,7 @@ on a regular grid, where `T` is traveltime and `v` is the seismic velocity.  Giv
 The inversion minimizes the cost function
 
 $$
-\phi(m) =  {r^{\top} C_{d} r + \epsilon\,\Vert m-m_{0}\Vert^{2} + \eta\, m^{\top} D m }
+\phi(m) =  {r^{\top} C_{d} r + \epsilon\Vert m-m_{0}\Vert^{2} + \eta m^{\top} D m }
 $$
 
 where `r` are traveltime residuals, `C_d` is the data covariance, `m` is the model vector, `m_0` a starting model, and `D` the 2D discrete Laplacian matrix.  The parameters $\epsilon$ and $\eta$ control the perturbation and roughness penalties respectively.
@@ -192,7 +192,7 @@ The inversion configuration describes the grid size, location of the measurement
 
 1. **Image Based Model Inversion Example**
 
-   ![Velocity Model](images/Figure_3.png)
+   ![Velocity Model](images/Figure_4.png)
 
    *Figure 4: The resulting inverted velocity field from the 2D linearized inversion.*
 
