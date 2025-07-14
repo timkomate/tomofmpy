@@ -38,6 +38,12 @@ def patch_eikonal_solver(monkeypatch):
             # Return a small set of 3 points for hull
             return np.array([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]])
 
+        def save_model_csv(self, filename):
+            pass
+
+        def save_model_xyz(self, filename, use_latlon=False):
+            pass
+
     # Monkey‐patch Eikonal_Solver in the inversion module to use DummySolver
     from tomoFMpy.core import inversion
 
@@ -241,43 +247,6 @@ def test_run_linear_no_x0(tmp_path, measurement_csv):
     )
     with pytest.raises(RuntimeError):
         inv.run_linear()
-
-
-def test_save_model_csv(tmp_path, measurement_csv):
-    rf = tmp_path / "out6"
-    inv = Eikonal_Inversion(
-        modelspace=(1.0, 1.0),
-        gridsize=(1, 1),
-        measurement_csv=measurement_csv,
-        output_folder=str(rf),
-        bl_corner=(0, 0),
-        epsilon=1.0,
-        eta=1,
-        use_latlon=False,
-    )
-    vec = np.array([1.23])
-    inv._save_model_csv(vec, 5)
-    loaded = np.loadtxt(rf / "5.csv", delimiter=",")
-    assert loaded == pytest.approx(1.23)
-
-
-def test_save_model_xyz_no_latlon(tmp_path):
-    rf = tmp_path / "out7"
-    inv = Eikonal_Inversion(
-        modelspace=(1.0, 1.0),
-        gridsize=(1, 1),
-        measurement_csv=measurement_csv,
-        output_folder=str(rf),
-        bl_corner=(0, 0),
-        epsilon=1.0,
-        eta=1,
-        use_latlon=False,
-    )
-    inv.use_latlon = False
-    vec = np.array([1.23])
-    inv._save_model_xyz(vec, 3)
-    lines = (rf / "3.xyz").read_text().splitlines()
-    assert lines == ["0.000 0.000 1.230"]
 
 
 def test_save_model_png(tmp_path):

@@ -1,4 +1,5 @@
 import logging
+import os
 
 import numpy as np
 import pandas as pd
@@ -231,6 +232,25 @@ class Eikonal_Solver(Eikonal2D):
             filename,
         )
         io.save_measurements_csv(self.df, filename)
+
+    def save_model_csv(self, filename):
+        np.savetxt(filename, self._grid, fmt="%.2f", delimiter=",")
+
+    def save_model_xyz(self, filename, use_latlon=False):
+        flat = self._grid.flatten()
+        idx = 0
+        with open(filename, "w") as f:
+            for y in self.zaxis:
+                for x in self.xaxis:
+                    if use_latlon:
+                        lon, lat = self.inv_transformer.transform(
+                            x * 1000 + self.base_xy[0],
+                            y * 1000 + self.base_xy[1],
+                        )
+                        f.write(f"{lon:.3f} {lat:.3f} {flat[idx]:.3f}\n")
+                    else:
+                        f.write(f"{x:.3f} {y:.3f} {flat[idx]:.3f}\n")
+                    idx += 1
 
     def add_noise(self, sigma, mu=0):
         """

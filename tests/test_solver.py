@@ -193,6 +193,38 @@ def test_save_and_reload_measurements(tmp_path, simple_csv):
     assert np.allclose(df2["tt"].to_numpy(), [0.2, 0.4])
 
 
+def test_save_model_xyz_no_latlon(tmp_path, simple_csv):
+    rf = tmp_path / "out7"
+    grid = np.array([[1.23, 2.00], [1, 1]])
+    solver = Eikonal_Solver(
+        grid=grid,
+        gridsize=(1.0, 1.0),
+        measurements_csv=simple_csv,
+        bl_corner=(10.0, 50.0),
+    )
+    solver.save_model_xyz(tmp_path / "3.xyz")
+    lines = (tmp_path / "3.xyz").read_text().splitlines()
+    assert len(lines) == 4
+    assert lines[0] == "0.000 0.000 1.230"
+    assert lines[1] == "1.000 0.000 2.000"
+    assert lines[2] == "0.000 1.000 1.000"
+    assert lines[3] == "1.000 1.000 1.000"
+
+
+def test_save_model_csv(tmp_path, simple_csv):
+    rf = tmp_path / "5.csv"
+    grid = np.array([[1.23, 2.00], [1, 1]])
+    solver = Eikonal_Solver(
+        grid=grid,
+        gridsize=(1.0, 1.0),
+        measurements_csv=simple_csv,
+        bl_corner=(10.0, 50.0),
+    )
+    solver.save_model_csv(rf)
+    loaded = np.loadtxt(rf, delimiter=",")
+    assert np.allclose(loaded, grid)
+
+
 def test_add_noise_affects_traveltimes(simple_csv, monkeypatch):
     grid = np.zeros((3, 3))
     solver = Eikonal_Solver(

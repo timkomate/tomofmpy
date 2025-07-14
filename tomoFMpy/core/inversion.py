@@ -120,31 +120,17 @@ class Eikonal_Inversion:
         """
         logger.info("Iteration %d: residual=%.4f", iteration, cost)
         self.residuals.append(cost)
-        self._save_model_csv(vec, iteration)
-        self._save_model_xyz(vec, iteration)
+        self._save_model_csv(iteration)
+        self._save_model_xyz(iteration)
         self._save_model_png(vec, iteration)
 
-    def _save_model_csv(self, vec, iteration):
-        sol = vec.reshape(self.ny, self.nx)
+    def _save_model_csv(self, iteration):
         path = os.path.join(self.output_folder, f"{iteration}.csv")
-        np.savetxt(path, sol, fmt="%.2f", delimiter=",")
+        self.solver.save_model_csv(path)
 
-    def _save_model_xyz(self, vec, iteration):
+    def _save_model_xyz(self, iteration):
         outp = os.path.join(self.output_folder, f"{iteration}.xyz")
-        flat = vec.flatten()
-        idx = 0
-        with open(outp, "w") as f:
-            for y in self.yaxis:
-                for x in self.xaxis:
-                    if self.use_latlon:
-                        lon, lat = self.solver.inv_transformer.transform(
-                            x * 1000 + self.solver.base_xy[0],
-                            y * 1000 + self.solver.base_xy[1],
-                        )
-                        f.write(f"{lon:.3f} {lat:.3f} {flat[idx]:.3f}\n")
-                    else:
-                        f.write(f"{x:.3f} {y:.3f} {flat[idx]:.3f}\n")
-                    idx += 1
+        self.solver.save_model_xyz(outp, self.use_latlon)
 
     def _save_model_png(self, vec, iteration):
         sol = vec.reshape(self.ny, self.nx)
